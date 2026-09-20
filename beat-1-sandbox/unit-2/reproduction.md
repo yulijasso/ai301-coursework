@@ -25,68 +25,12 @@ yulijasso
 
 https://github.com/codepath/pathreview-ai301-fa26-s1/issues/68#issuecomment-5752945639
 
-I posted the claim and the reproduction as a single comment on the issue, so the same
-permalink and text appear under both fields. The claim is its opening line; everything
-from the first run onward is the reproduction.
-
 ````
 Hi, I'd like to take this bug.
 
-I reproduced the crash on the current `main` (`f89c06f`) — `index([])` never reaches
-a guard, it goes straight into `BM25Okapi`, which divides by `corpus_size`.
-
-**Run 1 — empty corpus:**
-
-```python
-from rag.retriever.keyword_search import KeywordSearcher
-s = KeywordSearcher()
-s.index([])
-```
-
-```
-Traceback (most recent call last):
-  File "<string>", line 3, in <module>
-  File "rag/retriever/keyword_search.py", line 25, in index
-    self.bm25 = BM25Okapi(tokenized_corpus)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File ".venv/lib/python3.12/site-packages/rank_bm25.py", line 83, in __init__
-    super().__init__(corpus, tokenizer)
-  File ".venv/lib/python3.12/site-packages/rank_bm25.py", line 27, in __init__
-    nd = self._initialize(corpus)
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File ".venv/lib/python3.12/site-packages/rank_bm25.py", line 52, in _initialize
-    self.avgdl = num_doc / self.corpus_size
-                 ~~~~~~~~^~~~~~~~~~~~~~~~~~
-ZeroDivisionError: division by zero
-```
-
-**Run 2 (control) — the same calls with one chunk instead of zero:**
-
-```python
-s.index([{"id": 1, "text": "python programming"}])
-print(s.search("python", top_k=10))
-```
-
-```
-[info] keyword_index_built      chunk_count=1
-[info] keyword_search_complete  query_len=1 results_count=1
-[{'id': 1, 'text': 'python programming', 'bm25_score': -0.2746530721670274}]
-```
-
-Same session, same interpreter, same `rank-bm25` — the only difference between the
-two runs is the argument to `index()`. Run 2 completes without an exception, so the
-empty corpus is what triggers the crash rather than anything else in the setup.
-
-**Expected:** `index([])` returns, and the following `search()` returns `[]` the way
-it already does when `self.bm25` is unset.
-**Actual:** `index([])` raises `ZeroDivisionError` from `rank_bm25._initialize`,
-before `search()` is ever reached.
-
-Environment: macOS 15.7.5 (arm64), Python 3.12.4, rank-bm25 0.2.2, repo at `f89c06f`.
-
-That lines up with what the issue describes: `search()` already returns `[]` when
-`self.bm25` is falsy (`keyword_search.py:38-40`), so `index()` is the only place an
-empty corpus turns into an exception.
+I've reproduced it locally on the current `main` (`f89c06f`) — `index([])` goes
+straight into `BM25Okapi`, which divides by `corpus_size`. The traceback, a control
+run with one chunk, and my environment are in a follow-up comment below.
 
 What I plan to do next:
 
@@ -105,15 +49,9 @@ found it.
 
 **Reproduction comment**
 
-https://github.com/codepath/pathreview-ai301-fa26-s1/issues/68#issuecomment-5752945639
-
-I posted the claim and the reproduction as a single comment on the issue, so the same
-permalink and text appear under both fields. The claim is its opening line; everything
-from the first run onward is the reproduction.
+https://github.com/codepath/pathreview-ai301-fa26-s1/issues/68#issuecomment-5752977388
 
 ````
-Hi, I'd like to take this bug.
-
 I reproduced the crash on the current `main` (`f89c06f`) — `index([])` never reaches
 a guard, it goes straight into `BM25Okapi`, which divides by `corpus_size`.
 
@@ -169,20 +107,6 @@ Environment: macOS 15.7.5 (arm64), Python 3.12.4, rank-bm25 0.2.2, repo at `f89c
 That lines up with what the issue describes: `search()` already returns `[]` when
 `self.bm25` is falsy (`keyword_search.py:38-40`), so `index()` is the only place an
 empty corpus turns into an exception.
-
-What I plan to do next:
-
-- Add an empty-corpus guard in `KeywordSearcher.index()` so it records the (empty)
-  chunk list and clears any previously built index, letting the existing `search()`
-  early-return handle the empty case rather than adding a second code path.
-- Drop the `@pytest.mark.xfail(strict=True, ...)` marker from
-  `tests/unit/test_keyword_search.py::TestKeywordSearcher::test_empty_index`, per
-  the note in CONTRIBUTING.md about seeded bugs — with the guard in place that test
-  would otherwise fail as `XPASS(strict)`.
-- Run `make check && make test-unit` before opening the PR and post the results there.
-
-I'll keep the change to what the bug needs and leave the rest of the module as I
-found it.
 ````
 
 ## Eval iterations
