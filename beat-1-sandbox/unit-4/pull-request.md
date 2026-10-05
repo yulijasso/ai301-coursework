@@ -32,8 +32,8 @@ description. Head commit `79b6a16`, off base `f89c06f`.
 
 Live mode, run from the fork clone against the issue, `beat-1-sandbox/unit-3/plan.md` with
 its Deviations section, the branch diff (`git diff main...HEAD`), `pr-draft.md`, and the
-repo's `.github/PULL_REQUEST_TEMPLATE.md` and `docs/CONTRIBUTING.md`. Three runs: the first
-rejected, the next two accepted. The full transcript is in `precheck-run.md` in this
+repo's `.github/PULL_REQUEST_TEMPLATE.md` and `docs/CONTRIBUTING.md`. Four runs: the first
+rejected, the next three accepted. The full transcript is in `precheck-run.md` in this
 directory.
 
 1. **reject** — `standards-and-comms` failed: the draft had no PR title, and the commit
@@ -43,6 +43,11 @@ directory.
    title was added to the draft.
 3. **accept** — re-graded after the AI-use disclosure was shortened; every required section
    still had real content.
+4. **accept** — re-graded after the PR description was updated to record the CI outcome (all
+   six jobs green, per-job block with workflow links, typecheck note rewritten from a local
+   failure to green-in-CI). `test-evidence` now rests on visible CI outcomes rather than a
+   disclosed local failure, and CONTRIBUTING's "CI must be green" requirement is satisfied in
+   fact.
 
 The accepting run, verbatim:
 
