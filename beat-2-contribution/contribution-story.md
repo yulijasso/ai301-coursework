@@ -54,21 +54,18 @@ happened; these entries are the toolkit's own timeline.
 All four entries are graded. Keep every heading below, and fill each
 one in the week it belongs to.
 
-**Unit 5: built issue-scout's search strategy, and patched `repo-in-use` after the first wild scan**
+**Unit 5: built issue-scout and fixed what my first real scan broke**
 
-I built issue-scout on top of my Unit 1 rubric, with four search queries traced to my fit
-profile and five ranking filters that cut 306 results down to a top five. On the first real
-scan (2026-10-11), my `repo-in-use` check accepted codercops/discord-bot and jeganxthan/aether,
-two repos created that same day with 0 stars and no releases: the check's backup rule ("3 of
-the last 5 commits within 90 days") only proved the author had been busy that week, not that
-anyone used the software, and the frozen Unit 1 snapshots never included a brand-new repo to
-expose that. I patched the check so a repo with no recent release must also have at least 10
-stars, which rejects both day-old repos and still passes every healthy repo in the Unit 1 set,
-and re-running Unit 1's harness scored the patched rubric 20/20, the same as before. The scan
-also showed that my ranking let the TypeScript query's newest issues take all five slots, so I
-changed it to rank within each query and take turns between queries; the second scan gave my
-RAG queries four of the five slots, surfaced a vector-search and hybrid-search docs issue
-(psssnikhil/ai-engineering-hub#32), and the patched check rejected two more low-star repos.
+2026-10-11: I turned my Unit 1 issue-select skill into issue-scout and pointed its search
+strategy at retrieval and RAG work, with one TypeScript-only query to leave room for surprises.
+My first scan graded five issues and accepted all five, but none of them were about RAG,
+because the TypeScript query kept returning brand-new issues with zero comments and those took
+every slot. Two of the accepted repos had been created that same day with no stars and no
+releases, and my repo-in-use check still passed them, since all it needed was a few recent
+commits. I fixed the rubric so a repo without a recent release also needs at least 10 stars,
+and changed the ranking so each query takes turns filling the top five. On the second scan my
+RAG queries got four of the five slots, the new rule rejected two more tiny repos, and the
+patched rubric still scores 20/20 on the Unit 1 eval.
 
 **Unit 6: [one line on the tool work]**
 
