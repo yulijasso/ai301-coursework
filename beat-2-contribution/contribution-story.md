@@ -7,12 +7,11 @@ the repository is not read. **Keep every section header below under its exact na
 format criteria grade exactly that. Your course repo link is the whole submission: no tool
 files and no evidence uploads are part of Assignment 5.
 
-**Contribution Number:** [1]
-**Student:** [Student name]
-**GitHub Username:** [your GitHub username, exactly as it appears on your profile - no @, no
-profile URL. Your comments upstream are identified by this name.]
+**Contribution Number:** 1
+**Student:** Yuliana Jasso
+**GitHub Username:** yulijasso
 **Issue:** [GitHub issue link]
-**Pull Request:** [GitHub PR link, once opened]
+**Pull Request:** not opened yet
 
 One repository, built across units 5 to 8, telling the whole story of your real
 contribution. Fill it as you work, not at the end — the sections below ask for evidence that
@@ -55,10 +54,21 @@ happened; these entries are the toolkit's own timeline.
 All four entries are graded. Keep every heading below, and fill each
 one in the week it belongs to.
 
-**Unit 5: [one line on the tool work]**
+**Unit 5: built issue-scout's search strategy, and patched `repo-in-use` after the first wild scan**
 
-[2-4 sentences: what you built (the scout, your strategy), what broke
-or fell short, what changed because of it.]
+I built issue-scout on top of my Unit 1 rubric, with four search queries traced to my fit
+profile and five ranking filters that cut 306 results down to a top five. On the first real
+scan (2026-10-11), my `repo-in-use` check accepted codercops/discord-bot and jeganxthan/aether,
+two repos created that same day with 0 stars and no releases: the check's backup rule ("3 of
+the last 5 commits within 90 days") only proved the author had been busy that week, not that
+anyone used the software, and the frozen Unit 1 snapshots never included a brand-new repo to
+expose that. I patched the check so a repo with no recent release must also have at least 10
+stars, which rejects both day-old repos and still passes every healthy repo in the Unit 1 set,
+and re-running Unit 1's harness scored the patched rubric 20/20, the same as before. The scan
+also showed that my ranking let the TypeScript query's newest issues take all five slots, so I
+changed it to rank within each query and take turns between queries; the second scan gave my
+RAG queries four of the five slots, surfaced a vector-search and hybrid-search docs issue
+(psssnikhil/ai-engineering-hub#32), and the patched check rejected two more low-star repos.
 
 **Unit 6: [one line on the tool work]**
 
