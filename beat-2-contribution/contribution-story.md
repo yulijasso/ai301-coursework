@@ -69,17 +69,18 @@ patched rubric still scores 20/20 on the Unit 1 eval.
 
 **Unit 6: the voice-guard stopped my claim once, and the repo memory dropped the AGENTS.md import**
 
-2026-10-18: My first claim draft for statewave#485 ended with "I'm aiming to have it up within
-the next week", and the guard stopped it on my own never-post rule: "A date, an ETA, or a
-guarantee that a fix will land." I cut the sentence, rewrote the claim to point at the lines I
-had read, and the final wording passed (both checks are in `guard-log.md`). I posted from the
-browser, so the hook never saw the post itself; the manual pass on that exact text is the
-guarded check. For the repo memory I wrote a 51-line `CLAUDE.local.md` for
-statewave-multi-agent-shared-context from statewave's CONTRIBUTING.md (the example repo has
-none) and one scoped orientation run. I deleted the template's `@AGENTS.md` import, because
-this repo's AGENTS.md is auto-generated instructions to call a Statewave MCP server I don't
-have, not contributor conventions. The orientation also flagged that a retrieval episode could
-get compiled into memory, which I confirmed during reproduction and recorded in the file.
+2026-10-18: The voice-guard stopped my first claim for statewave#485 because it promised a
+timeline ("I'm aiming to have it up within the next week"), which breaks my own rule against
+posting a date or ETA. I removed that sentence, and the revised claim passed. I posted it from
+the browser, which the guard can't watch, so I ran the guard by hand on the exact text first;
+both the stop and the pass are in `guard-log.md`.
+
+For the repo memory, I wrote a 51-line `CLAUDE.local.md` using statewave's CONTRIBUTING.md and
+one scoped look at the files my issue touches. One change from the template: I removed the
+`@AGENTS.md` line, because this repo's AGENTS.md isn't contributor guidance. It's an
+auto-generated note telling AI tools to use a Statewave server I don't have set up. The scoped
+look also warned that my fix could accidentally save retrieval logs as memories, and I
+confirmed that while reproducing the bug.
 
 **Unit 7: [one line on the tool work]**
 
@@ -95,26 +96,27 @@ drafted, what you did with the draft.]
 
 ## Why I Chose This Issue
 
-I ran a fresh scan on 2026-10-18 with the round-robin strategy from Unit 5. The four queries
-returned 306 issues, the filters cut that to 108, and the top five went Q1, Q2, Q4, Q1, Q2. The
-scout accepted only two of them, a docs Q&A page and a Makefile task, and the 10-star floor
-rejected the other three. Neither accepted issue was the retrieval code I said I wanted, so I
-went further down the Q1 and Q2 rankings and graded five more. That found
-smaramwbc/statewave#485, which the scout accepted with every required check passing: the
-"context retrieval" section of a multi-agent memory demo is always empty because nothing ever
-writes the episodes it reads. I picked it over the other accepted issues because it is a real
-bug with a clear before and after, the issue suggests a fix, and it sits in the retrieval path
-of an agent memory runtime, which is close to the RAG work I want to learn. I hope to learn how
-Statewave compiles episodes into memories and serves them back as context.
+On 2026-10-18 I ran a fresh scan with my scout. Out of 306 issues, it graded the top five and
+accepted two: a page of interview questions to write, and a small Makefile task. Neither was
+the kind of retrieval code I wanted to work on, so I kept going down the list and graded five
+more. That's where I found statewave#485. Statewave is a memory system for AI agents, and this
+demo shows several agents sharing one memory. Its timeline tool has a section meant to show
+what each agent retrieved before acting, but that section is always empty, because nothing in
+the code ever records a retrieval. My scout accepted it, with every required check passing.
 
-The scout's weak spots were real. The five-candidate limit hid the best fit, since #485 was
-never in the top five. It also graded the wrong repo: #485 is filed in `statewave`, where an
-outsider's PR was merged in a day, but the code lives in `statewave-multi-agent-shared-context`,
-where four outsider PRs opened between Oct 5 and Oct 17 have no maintainer review yet. I only
-saw that after claiming, so I'm going in expecting a slow review. Both are logged in
-`scan-notes.md` (entries 8 and 10). The fix I'd make is to sample responsiveness in the repo
-that holds the named files, and to grade past five when the top five has fewer than two code
-tasks.
+I chose it because it's a real bug I can see happen and then see fixed, the issue already
+suggests a fix, and it sits right in the retrieval side of an AI memory system, which is
+what I want to get better at. I'm hoping to learn how a system like this turns what agents
+write into memories and hands the right ones back when an agent asks.
+
+My scout didn't handle this search perfectly. It only grades five issues, and #485 wasn't one
+of them, so I had to go past its limit to find the best fit. It also checked the wrong repo:
+the issue is filed in the main `statewave` repo, where the maintainer responds quickly, but the
+code lives in a separate repo where four PRs from other contributors are still waiting for
+review. I only noticed that after I had claimed it, so I'm expecting the review to take a while.
+I wrote both problems down in `scan-notes.md`. Next time, I'd have the scout check the repo
+where the code actually lives, and grade more than five issues when the first five don't
+include much real code work.
 
 **Claim comment:** https://github.com/smaramwbc/statewave/issues/485#issuecomment-6248332834 (posted 2026-10-18)
 
@@ -127,8 +129,9 @@ tasks.
   only replies in the sample came from other contributors).
 - Difficulties: the top-five limit hid #485; the tracker repo and the code repo differ, so the
   responsiveness sample read the wrong repo; Q3 returned nothing again.
-- What changed: logged as scan-notes entries 8 to 11. Not patched yet, so the Unit 1
-  regression run still matches the committed rubric.
+- What changed: logged as scan-notes entries 8 to 11, not patched yet. Scan 3 ran on the
+  rubric from before the 2026-10-18 scope patch (`scope-fits-newcomer` became
+  `scope-feasible`); the patched rubric scores 19/20 in `rubric-regression-run.txt`.
 
 ---
 
