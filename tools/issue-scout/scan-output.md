@@ -233,3 +233,123 @@ breaks ties.
   ], "verdict": "reject"}
 ]
 ```
+
+---
+
+# Scan 3 (claim day): 2026-10-18 (live mode, iteration-2 strategy and rubric)
+
+Funnel: Q1–Q4 returned 306 unique issues. f1 (no assignee) 262, f2 (≤90 days) 196, f3 (≤15 comments) 195, f4 (one per repo) 108.
+Survivors per query: Q1 52, Q2 41, Q3 0, Q4 16. Q3's turn passed on. Slots: Q1, Q2, Q4, Q1, Q2.
+
+## Accepted (fit order)
+1. psssnikhil/ai-engineering-hub#32 — Q&A bank: vector DBs, indexing, hybrid search (Q1+Q2, 2 hits, 0 comments). Preferred 1/2.
+2. mohitmishra786/readprism#199 — add `make eval` / `make retrieval-eval`; eval scripts read-only by default (Q1, 0 comments, updated 2026-10-18). Preferred 1/2.
+
+## Rejected
+- mintzocloud-coder/sutra#19 — repo-in-use: 1 star, no release, repo created 2026-10-17.
+- tobioffice/NbkristQik#43 — repo-in-use: 1 star, latest release 2025-08-06 (>12 months).
+- drnicholasbrink/HarmonAIze#54 — repo-in-use: 6 stars, no release.
+
+## Friction
+- Q3 ("vector search", help wanted) returned zero survivors again (scan-notes #7 still open).
+- #32 and #199 tie at 1/2 preferred because maintainer-responsive is unclear on empty samples (scan-notes #4 still open).
+- HarmonAIze#54 is a real code bug touching embedding projections, sunk only by the 10-star floor.
+
+```json
+[
+ {"item":"https://github.com/psssnikhil/ai-engineering-hub/issues/32","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"archived=false; newest commit 2026-08-23 (Merge PR #38), 56 days ago"},
+  {"name":"repo-in-use","grade":"pass","evidence":"No release; 5 of last 5 commits within 90 days (2026-08-09..08-23) and 18 stars"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"One doc file docs/interview-prep/questions-vector-search.md with 15 listed Q&As; opener OWNER"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments, no linked or cross-referenced PR"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":".github/CONTRIBUTING.md silent on AI; AGENTS.md and CLAUDE.md present"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"No outsider-opened issues among the last 60 to sample"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"'good first issue' and 'documentation' labels; names target file path"}],"verdict":"accept"},
+ {"item":"https://github.com/mohitmishra786/readprism/issues/199","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"archived=false; newest commit 2026-10-17 (Record the v0.1.0 release)"},
+  {"name":"repo-in-use","grade":"pass","evidence":"latest release v0.1.0 on 2026-10-17"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"Two Makefile targets plus a --write flag, effort:S, with acceptance criteria; opener OWNER; part of epic #83 but itself one PR"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments; cross-refs are issues (#83, an external issue-finder), not PRs"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"CONTRIBUTING.md silent on AI"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"No outsider-opened issues among the last 60 to sample"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"'good first issue' label; names Makefile, scripts/rank_eval.py, docs/eval/ranking.md"}],"verdict":"accept"},
+ {"item":"https://github.com/mintzocloud-coder/sutra/issues/19","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"newest commit 2026-10-18"},
+  {"name":"repo-in-use","grade":"fail","evidence":"No release; 1 star (repo created 2026-10-17)"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"Migration + ingest script + kNN helper with acceptance; opener OWNER"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments, no PR"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"Not checked further; verdict already decided"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"Repo one day old"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"'good first issue'; names services/ai/scripts/"}],"verdict":"reject"},
+ {"item":"https://github.com/tobioffice/NbkristQik/issues/43","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"newest commit 2026-10-18"},
+  {"name":"repo-in-use","grade":"fail","evidence":"Latest release 2025-08-06 (>12 months); commits recent but 1 star"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"One package.json entry + CI pin; opener OWNER"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments, no PR"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"AGENTS.md present"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"Not sampled"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"'good first issue'; acceptance criteria"}],"verdict":"reject"},
+ {"item":"https://github.com/drnicholasbrink/HarmonAIze/issues/54","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"newest commit 2026-10-16"},
+  {"name":"repo-in-use","grade":"fail","evidence":"No release; 5 of 5 commits recent but 6 stars"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"Bug in core/views.py:1307 palette zip plus perf notes; opener OWNER"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments; cross-ref #64 is an issue"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"No CONTRIBUTING/AI policy file found (silence)"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"Not sampled"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"'good first issue'; names core/views.py:1307"}],"verdict":"reject"}
+]
+```
+
+---
+
+# Extension: slots past the top 5 (same scan, same queries, 2026-10-18)
+
+Went further down the Q1/Q2/Q4 rankings, pre-screened ~33 survivors on stars/release, and graded the five strongest RAG code candidates.
+
+## Accepted
+1. aieng-abdullah/production-rag-assistant#147 — abstain_retrieval_empty metric can never be non-zero (Q1). Preferred 1/2.
+2. smaramwbc/statewave#485 — context_retrieval episodes never written, inspector section always empty (Q1). Preferred 1/2.
+3. friday-memory/friday#1 — local Ollama embeddings provider (Q2). Preferred 1/2.
+4. Aryan-Pardeshi/DeepResearch_AI#25 — metadata_validator: validate or rename (Q1). Preferred 1/2.
+
+## Rejected
+- mtrnix/metronix-memory#429 — unclaimed: open PR #549 "Closes #429" by iamcipherdev (2026-10-15).
+
+```json
+[
+ {"item":"https://github.com/aieng-abdullah/production-rag-assistant/issues/147","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"archived=false; newest commit 2026-10-12 (Qdrant keep-alive #153)"},
+  {"name":"repo-in-use","grade":"pass","evidence":"No release; 5 of last 5 commits 2026-10-10..12 and 71 stars"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"Bug opened by OWNER; option (a) remove metric is small, acceptance criteria stated"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments; only xref is unrelated closed PR #139"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"CONTRIBUTING.md silent on AI; AGENTS.md present"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"No outsider-opened issues in last 50"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"good first issue + help wanted; names eval/retrieval_precision.py:137"}],"verdict":"accept"},
+ {"item":"https://github.com/smaramwbc/statewave/issues/485","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"newest commit 2026-10-16"},
+  {"name":"repo-in-use","grade":"pass","evidence":"latest release 2026-08-30; 283 stars"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"Bug fix (not a feature) in one example module with suggested fix; maintainer-applied good first issue"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments, no xrefs"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"AGENTS.md: 'orientation for humans and AI coding agents'"},
+  {"name":"maintainer-responsive","grade":"fail","evidence":"Sampled outsider issues #500/#502 got replies only from CONTRIBUTORs"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"names timeline_inspector.py, statewave_agents/context.py"}],"verdict":"accept"},
+ {"item":"https://github.com/friday-memory/friday/issues/1","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"newest commit 2026-10-04"},
+  {"name":"repo-in-use","grade":"pass","evidence":"latest release 2026-10-04"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"Feature endorsed: opener is MEMBER; one provider + test + README"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments, no xrefs"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"CONTRIBUTING silent; AGENTS.md present"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"No outsider-opened issues in sample"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"good first issue + help wanted; acceptance criteria"}],"verdict":"accept"},
+ {"item":"https://github.com/Aryan-Pardeshi/DeepResearch_AI/issues/25","checks":[
+  {"name":"repo-alive","grade":"pass","evidence":"newest commit 2026-10-17"},
+  {"name":"repo-in-use","grade":"pass","evidence":"No release; 5 of 5 commits 2026-10-17 and 68 stars"},
+  {"name":"scope-fits-newcomer","grade":"pass","evidence":"OWNER-opened; rename option is one bounded PR"},
+  {"name":"unclaimed","grade":"pass","evidence":"No assignee, 0 comments, no xrefs"},
+  {"name":"ai-policy-allows","grade":"pass","evidence":"CONTRIBUTING has no AI ban (conditions: don't overclaim, tests offline)"},
+  {"name":"maintainer-responsive","grade":"unclear","evidence":"Only outsider issue #41 (2026-10-05) has no reply yet, 13 days in"},
+  {"name":"newcomer-signposted","grade":"pass","evidence":"good first issue; names retrieval.py, frontend/app.js"}],"verdict":"accept"},
+ {"item":"https://github.com/mtrnix/metronix-memory/issues/429","checks":[
+  {"name":"unclaimed","grade":"fail","evidence":"Open PR #549 'Closes #429' by iamcipherdev, 2026-10-15"}],"verdict":"reject"}
+]
+```

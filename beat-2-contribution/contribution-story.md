@@ -1,4 +1,4 @@
-# Contribution: [Issue Title]
+# Contribution: timeline_inspector's context-retrieval section is always empty - nothing writes context_retrieval episodes
 
 Path: `beat-2-contribution/contribution-story.md`
 
@@ -10,7 +10,7 @@ files and no evidence uploads are part of Assignment 5.
 **Contribution Number:** 1
 **Student:** Yuliana Jasso
 **GitHub Username:** yulijasso
-**Issue:** [GitHub issue link]
+**Issue:** https://github.com/smaramwbc/statewave/issues/485
 **Pull Request:** not opened yet
 
 One repository, built across units 5 to 8, telling the whole story of your real
@@ -67,11 +67,19 @@ and changed the ranking so each query takes turns filling the top five. On the s
 RAG queries got four of the five slots, the new rule rejected two more tiny repos, and the
 patched rubric still scores 20/20 on the Unit 1 eval.
 
-**Unit 6: [one line on the tool work]**
+**Unit 6: the voice-guard stopped my claim once, and the repo memory dropped the AGENTS.md import**
 
-[2-4 sentences: the voice-guard, the repo-memory file. What broke or
-fell short, and what changed because of it. "Nothing broke" counts when
-it is true - say how you know.]
+2026-10-18: My first claim draft for statewave#485 ended with "I'm aiming to have it up within
+the next week", and the guard stopped it on my own never-post rule: "A date, an ETA, or a
+guarantee that a fix will land." I cut the sentence, rewrote the claim to point at the lines I
+had read, and the final wording passed (both checks are in `guard-log.md`). I posted from the
+browser, so the hook never saw the post itself; the manual pass on that exact text is the
+guarded check. For the repo memory I wrote a 51-line `CLAUDE.local.md` for
+statewave-multi-agent-shared-context from statewave's CONTRIBUTING.md (the example repo has
+none) and one scoped orientation run. I deleted the template's `@AGENTS.md` import, because
+this repo's AGENTS.md is auto-generated instructions to call a Statewave MCP server I don't
+have, not contributor conventions. The orientation also flagged that a retrieval episode could
+get compiled into memory, which I confirmed during reproduction and recorded in the file.
 
 **Unit 7: [one line on the tool work]**
 
@@ -87,24 +95,40 @@ drafted, what you did with the draft.]
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs in your own words: how you searched, what your scan
-surfaced, what your scout's verdict said, why this issue fits your
-profile, and what you hope to learn. If your scout's verdict on it
-was reject and you chose it anyway, say so here and say why; choosing
-against your own tool silently is what loses points. Close with an
-honest read of the tool itself: where the scout fell short on a real
-wild search and what you changed or would change, or what convinced
-you it held up. **Record the link to your claim comment in this section too.**
-Not claimed yet? Write `claim pending` and today's date where the link goes,
-and add the link the moment your claim lands.]
+I ran a fresh scan on 2026-10-18 with the round-robin strategy from Unit 5. The four queries
+returned 306 issues, the filters cut that to 108, and the top five went Q1, Q2, Q4, Q1, Q2. The
+scout accepted only two of them, a docs Q&A page and a Makefile task, and the 10-star floor
+rejected the other three. Neither accepted issue was the retrieval code I said I wanted, so I
+went further down the Q1 and Q2 rankings and graded five more. That found
+smaramwbc/statewave#485, which the scout accepted with every required check passing: the
+"context retrieval" section of a multi-agent memory demo is always empty because nothing ever
+writes the episodes it reads. I picked it over the other accepted issues because it is a real
+bug with a clear before and after, the issue suggests a fix, and it sits in the retrieval path
+of an agent memory runtime, which is close to the RAG work I want to learn. I hope to learn how
+Statewave compiles episodes into memories and serves them back as context.
+
+The scout's weak spots were real. The five-candidate limit hid the best fit, since #485 was
+never in the top five. It also graded the wrong repo: #485 is filed in `statewave`, where an
+outsider's PR was merged in a day, but the code lives in `statewave-multi-agent-shared-context`,
+where four outsider PRs opened between Oct 5 and Oct 17 have no maintainer review yet. I only
+saw that after claiming, so I'm going in expecting a slow review. Both are logged in
+`scan-notes.md` (entries 8 and 10). The fix I'd make is to sample responsiveness in the repo
+that holds the named files, and to grade past five when the top five has fewer than two code
+tasks.
+
+**Claim comment:** https://github.com/smaramwbc/statewave/issues/485#issuecomment-6248332834 (posted 2026-10-18)
 
 **Toolkit**
 
-- Tool: issue-scout (your scout: your search strategy, your rubric),
-  and how you used it
-- What it produced: [the scan and its verdict on this issue, described]
-- Difficulties: [where it fell short, or "none met" if none did]
-- What changed: [what you patched or would update, or "nothing"]
+- Tool: issue-scout in live scan mode with my iteration-2 strategy and rubric, then the same
+  rubric on five more candidates from further down the same ranking.
+- What it produced: scan 3 in `tools/issue-scout/scan-output.md`. Six of ten graded issues
+  were accepted. #485 passed every required check, with `maintainer-responsive` failing (the
+  only replies in the sample came from other contributors).
+- Difficulties: the top-five limit hid #485; the tracker repo and the code repo differ, so the
+  responsiveness sample read the wrong repo; Q3 returned nothing again.
+- What changed: logged as scan-notes entries 8 to 11. Not patched yet, so the Unit 1
+  regression run still matches the committed rubric.
 
 ---
 

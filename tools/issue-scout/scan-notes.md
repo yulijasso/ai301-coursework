@@ -58,3 +58,28 @@ rubric), and what I did about it. The full read-outs are in `scan-output.md`.
   assigned, quiet for more than 90 days, or in a repo another query had already taken.
 - **To change:** swap `help wanted` for `good first issue`, or widen the phrase. Not changed
   yet.
+
+## 2026-10-18: scan 3 (claim day)
+
+**8. The top five hid the best fit.** *(strategy: how many to grade)*
+- **What happened:** the round-robin top five held one code task in a used repo
+  (readprism#199). Going further down Q1 and Q2 found production-rag-assistant#147 and
+  statewave#485, both real retrieval bugs. #485 is the issue I claimed.
+- **To change:** grade more than five when the top five has fewer than two code tasks, or
+  rank `good first issue` bugs above docs and content tasks. Not changed yet.
+
+**9. The 10-star floor sank a real code bug.** *(rubric: repo-in-use)*
+- **What happened:** HarmonAIze#54 (embedding-projection bug, 6 stars, no release) was
+  rejected only by the floor I added on 2026-10-11. The rule worked as written.
+- **Not changed:** one case isn't enough to move the threshold.
+
+**10. The issue tracker and the code live in different repos.** *(rubric: maintainer-responsive)*
+- **What happened:** #485 is filed in `statewave`, but the code is in
+  `statewave-multi-agent-shared-context`. The scout sampled the tracker repo, where an outsider's
+  PR was merged in a day. In the code repo, four outsider PRs (Oct 5 to 17) have no maintainer
+  review yet. I found this only after claiming.
+- **To change:** when an issue names files that aren't in its repo, sample the repo that holds
+  them. Not patched yet.
+
+**11. Two old frictions held.** Q3 returned no survivors again (#7), and every accepted issue
+tied on `maintainer-responsive` because of empty samples (#4).
