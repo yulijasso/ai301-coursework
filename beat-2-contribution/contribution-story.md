@@ -82,24 +82,46 @@ auto-generated note telling AI tools to use a Statewave server I don't have set 
 look also warned that my fix could accidentally save retrieval logs as memories, and I
 confirmed that while reproducing the bug.
 
-**Unit 7: the ship-gate stopped my own PR three times, each time on something true**
+**Unit 7: Installed the ship-gate, wrote my manifest, and shipped before it passed**
 
-I installed the ship-gate over my unit-4 pr-precheck and wrote `ship-manifest.md` for
-statewave-multi-agent-shared-context: two must-pass rows mined from the repo's `ci.yml`
-(dependency install, `py_compile` across every tracked file) in the fresh-shell form that
-runs cold, plus a dated exclusion for CI's markdown link check, which runs as a GitHub
-Action and has no local command. On my real branch the gate rejected three times before it
-accepted: first because I had no PR description at all, then because my description cited
-`main.py` before/after runs while my own `test_evidence.md` said I had not run `main.py`
-yet, and then, after I added a commit that dropped a redundant test, because the
-description still claimed three tests when the branch had two. The second stop was the one
-that taught me something: the gate reads `test_evidence.md` and `plan.md` as the truth and
-holds the PR text against them, so a stale local note becomes a blocked ship. The runs were
-real — I confirmed `sw-f7b75257` and `sw-d2893eea` were still on my local Statewave server,
-with three `context_retrieval` episodes in `sw-d2893eea:reads` — so what changed was the
-evidence file, not the claim: I corrected the stale line, added the end-to-end runs with the
-model override disclosed, and now re-run the manifest checks at HEAD before every gate run
-rather than trusting output captured at an earlier commit.
+2026-10-24: I installed the ship-gate, which runs my manifest's checks and then my own
+pr-precheck before any `gh pr create` goes out. The install swapped pr-precheck to the
+real-world scope and kept the old one as `scope.md.sandbox`. My manifest has two rows that
+run, both mined from the repo's `.github/workflows/ci.yml`: the dependency install and the
+`py_compile` check over every tracked `.py` file, written as `.venv/bin/pip` and
+`.venv/bin/python` so they run in a cold shell instead of my activated one. I excluded CI's
+markdown link check with the date and the reason: it runs as a GitHub Action
+(`lycheeverse/lychee-action@v2`), there is no command the repo asks a contributor to run,
+and `lychee` is not installed here. There is no test row in the first table because the repo
+has no test suite of its own; the tests on my branch are mine, and I run them separately.
+
+My first gate run stopped because I had no PR description at all. The second stopped
+because the description I then wrote said the before/after transcripts were in the issue
+thread and cited `main.py` runs, while my own `test_evidence.md` still said "Not yet run
+through `main.py` (no LLM key)" and the thread had only my claim comment. The runs were
+real: I checked my local Statewave server and `sw-f7b75257` and `sw-d2893eea` were both
+still there, with three `context_retrieval` episodes in `sw-d2893eea:reads`. So the stale
+thing was my evidence file, and I fixed it rather than the claim. The third run passed. Then
+I added a commit that dropped a redundant test, and the next run stopped again: my evidence
+still said three tests when the branch had two, and the thread still had no deviation note.
+I posted the repro and the `:reads` deviation on #485 on 2026-10-25, then rebuilt the branch
+as one commit, `ef06cad`, with three tests and no README change.
+
+2026-10-25: I opened pull request #7 at 23:12. My gate had passed on 10-24 at 23:32, but on
+an earlier shape of this branch: four files including a README change, before I rebuilt the
+work as the single commit `ef06cad` with three tests and no README edit. So the pass I had
+did not cover what I shipped, and I ran the gate again against the live PR body afterwards.
+That retroactive run took two more blocks to get right: first my `test_evidence.md` was still captured at the old commits and named a
+test that no longer exists, then its live output read `Retrieved 0 memories for: Build
+auth…` while the shipped code writes `Retrieved N memories` with no task suffix, so the
+output predated the tip. I re-ran all three checks at `ef06cad`, re-captured the live runs
+the PR actually cites (`sw-84af58f6` before, `sw-b8b2fd2c` after, `Context reads` 0 to 3,
+and `sw-ce4f5ccd` for the separation check with `leak in assembled_context: False`), and the
+gate passed at 00:55 on 10-26, against the live PR body. That pass is in `guard-log.md`'s sibling,
+`gate-log.md`, and so are the five blocks before it. What I changed because of all this: I
+now re-run the manifest checks at HEAD before every gate run instead of trusting output
+captured at an earlier commit, because every single block the gate gave me was my evidence
+file describing a branch I no longer had.
 
 **Unit 8: [one line on the tool work]**
 
