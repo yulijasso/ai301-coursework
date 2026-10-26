@@ -11,7 +11,7 @@ files and no evidence uploads are part of Assignment 5.
 **Student:** Yuliana Jasso
 **GitHub Username:** yulijasso
 **Issue:** https://github.com/smaramwbc/statewave/issues/485
-**Pull Request:** not opened yet
+**Pull Request:** https://github.com/smaramwbc/statewave-multi-agent-shared-context/pull/7
 
 One repository, built across units 5 to 8, telling the whole story of your real
 contribution. Fill it as you work, not at the end — the sections below ask for evidence that
@@ -82,10 +82,24 @@ auto-generated note telling AI tools to use a Statewave server I don't have set 
 look also warned that my fix could accidentally save retrieval logs as memories, and I
 confirmed that while reproducing the bug.
 
-**Unit 7: [one line on the tool work]**
+**Unit 7: the ship-gate stopped my own PR three times, each time on something true**
 
-[2-4 sentences: the ship-gate and your gate manifest. What it produced
-on your real branch, what fought you, what changed because of it.]
+I installed the ship-gate over my unit-4 pr-precheck and wrote `ship-manifest.md` for
+statewave-multi-agent-shared-context: two must-pass rows mined from the repo's `ci.yml`
+(dependency install, `py_compile` across every tracked file) in the fresh-shell form that
+runs cold, plus a dated exclusion for CI's markdown link check, which runs as a GitHub
+Action and has no local command. On my real branch the gate rejected three times before it
+accepted: first because I had no PR description at all, then because my description cited
+`main.py` before/after runs while my own `test_evidence.md` said I had not run `main.py`
+yet, and then, after I added a commit that dropped a redundant test, because the
+description still claimed three tests when the branch had two. The second stop was the one
+that taught me something: the gate reads `test_evidence.md` and `plan.md` as the truth and
+holds the PR text against them, so a stale local note becomes a blocked ship. The runs were
+real — I confirmed `sw-f7b75257` and `sw-d2893eea` were still on my local Statewave server,
+with three `context_retrieval` episodes in `sw-d2893eea:reads` — so what changed was the
+evidence file, not the claim: I corrected the stale line, added the end-to-end runs with the
+model override disclosed, and now re-run the manifest checks at HEAD before every gate run
+rather than trusting output captured at an earlier commit.
 
 **Unit 8: [one line on the tool work]**
 
@@ -264,20 +278,26 @@ built, decisions you made when you made them, wrong turns included.]
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when opened]
+**PR Link:** https://github.com/smaramwbc/statewave-multi-agent-shared-context/pull/7
+(opened 2026-10-26, one commit: `ef06cad` "fix: record context retrievals so the timeline
+can show them")
 
-**PR Description:** [what the PR says; much of the content above
-adapts into it]
+**PR Description:** The PR fixes statewave#485. `before_acting()` now writes a
+`context_retrieval` episode after each read, with the row text in the README sample's format
+(`Retrieved N memories`, plus `(incl. deprecation)` when a deprecation is among them), and
+`timeline_inspector.py` merges those episodes into the timeline. It builds on the issue's
+suggested fix but writes the record to a sibling subject, `<subject_id>:reads`, because on
+the shared subject the next `note()` or `decide()` compiles it into memory, and in my check
+it became the Reviewer's top retrieved fact. The description shows before/after inspector
+output (`Context reads` 0 → 3), the check behind the sibling subject, the scope I left
+alone (the README, #475, compile behaviour, the agents), three new unit tests, and an
+AI-assistance disclosure. The full text is in `pull-request-485.md` next to this file.
 
 **Maintainer Feedback:**
 
-- [Date]: [feedback received, or "none yet"; silence is a normal
-  state and costs you nothing]
-- [Date]: [how you addressed it]
+- 2026-10-26: none yet.
 
-**Status:** [Awaiting review / Iterating / Merged / Closed. The
-status is a fact you record, never a grade: the PR is graded as
-opened.]
+**Status:** Awaiting review
 
 **Toolkit**
 
