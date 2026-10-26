@@ -175,26 +175,95 @@ include much real code work.
 
 **Problem Description**
 
-[In your own words, what is broken or missing?]
+The repo's whole pitch is that a shared-memory setup leaves an audit trail a
+message-passing setup cannot: you can see what every agent decided and what every agent
+read before deciding. `timeline_inspector.py` is the tool that shows it, and one of its
+sections, "AGENT CONTEXT RETRIEVALS", is supposed to list what each agent pulled out of
+shared context before acting. That half of the trail was never recorded. The section reads
+episodes of type `context_retrieval`, and no code in the repo wrote one — so the feature
+existed in the renderer and in the README, and nowhere else.
 
 **Expected Behavior**
 
-[What should happen?]
+After a run (`python main.py --mode statewave`, then
+`python timeline_inspector.py --run <run_id>`), the timeline shows one retrieval row per
+agent that called `before_acting()`, the AGENT CONTEXT RETRIEVALS section lists what each
+of them retrieved, and the summary's `Context reads` count matches the number of reads that
+actually happened — the shape the README's own sample output advertises.
+
+This is the fixed run `sw-b8b2fd2c`, trimmed, which is what that looks like:
+
+```
+─────────────────── CHRONOLOGICAL EVENT LOG ───────────────────
+  04:08:28.980Z   T+0.0s   Planner    context_retrieval      Retrieved 0 memories
+  04:08:28.985Z   T+0.0s   Planner    implementation_note    Planner done
+  04:08:29.518Z   T+0.5s   Coder      context_retrieval      Retrieved 0 memories
+  04:08:29.525Z   T+0.5s   Coder      implementation_note    Coder done
+  04:08:30.066Z   T+1.1s   Reviewer   context_retrieval      Retrieved 0 memories
+  04:08:30.072Z   T+1.1s   Reviewer   implementation_note    Reviewer done
+────────────────── AGENT CONTEXT RETRIEVALS ───────────────────
+╭──── Planner retrieved context at 04:08:28.980Z (T+0.0s) ────╮
+╭───── Coder retrieved context at 04:08:29.518Z (T+0.5s) ─────╮
+╭──── Reviewer retrieved context at 04:08:30.066Z (T+1.1s) ───╮
+──────────────────────────── SUMMARY ──────────────────────────
+  →  Context reads   : 3
+```
+
+Each row reads "Retrieved 0 memories" because of smaramwbc/statewave#475, a separate bug
+where retrieved memories come back empty; the row reports whatever `before_acting()`
+returned.
 
 **Current Behavior**
 
-[What actually happens?]
+The section never appears. `print_timeline()` filters the event list for
+`context_retrieval` episodes, finds none, and skips the block entirely, so there is no
+error and nothing missing-looking on screen. `Context reads` reads 0 in every run, even
+when the run's own console log shows the Coder and the Reviewer each reading shared context
+first. The README's sample shows rows like `Retrieved 2 memories (incl. deprecation)` that
+the code as written could not have produced.
+
+The same script on `main` @ `eb66ddc`, run `sw-84af58f6`, trimmed — only the notes survive,
+there is no AGENT CONTEXT RETRIEVALS section at all, and the count is 0:
+
+```
+─────────────────── CHRONOLOGICAL EVENT LOG ───────────────────
+  04:08:24.823Z   T+0.0s   Planner    implementation_note    Planner done
+  04:08:25.391Z   T+0.6s   Coder      implementation_note    Coder done
+  04:08:25.922Z   T+1.1s   Reviewer   implementation_note    Reviewer done
+──────────────────────────── SUMMARY ──────────────────────────
+  →  Run ID          : sw-84af58f6
+  →  Context reads   : 0
+```
 
 **Affected Components**
 
-[Which parts of the codebase are involved?]
+- `statewave_agents/context.py` — `SharedContext.before_acting()`, the read path. It calls
+  `get_context` and returns the bundle; it never writes an episode. This is where the
+  record has to start.
+- `timeline_inspector.py` — the renderer at line 107 that looks for `context_retrieval`
+  episodes and reads `retrieved_memories` out of their metadata, and the summary line that
+  counts them.
+- `core/statewave_client.py` — `write_episode` (line 26), the only way an episode gets
+  written. Its only callers were `SharedContext.decide` and `.note`, both of which compile
+  the subject afterwards when `auto_compile` is on, which is what made the compile
+  behaviour part of this issue rather than a detail.
+- `README.md` — the sample timeline, which documents the behaviour the code was missing.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: the repo memory, `CLAUDE.local.md`, written from statewave's CONTRIBUTING (this
+  repo has none of its own) plus one orientation run scoped to the subsystem the issue
+  touches, so every later session loads the map instead of re-reading the repo.
+- What it produced: a 51-line file with the repo's conventions, the build and test
+  commands, and the part that did the work here — the call graph around episodes: who
+  writes them, who reads them, and which calls compile. That is what turned "the section is
+  empty" into "there is no writer, and the two writers that exist both compile".
+- Difficulties: the template imports the repo's `AGENTS.md`, and here that file is
+  auto-generated instructions for calling a Statewave MCP server I do not have, not
+  contributor conventions. Importing it would have fed every session a page of irrelevant
+  setup.
+- What changed: I deleted the `@AGENTS.md` import and kept the file to what I verified
+  myself, which also kept it under the length where a memory file stops being read.
 
 ---
 
