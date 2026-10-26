@@ -400,8 +400,9 @@ separate issues.
    `before_acting()`.
 2. `timeline_inspector.py`: fetch the reads subject's timeline and merge its events into the
    event list.
-3. `README.md`: update the two sample rows and say in the `before_acting` bullet where the
-   records go.
+3. ~~`README.md`: update the two sample rows and say in the `before_acting` bullet where the
+   records go.~~ **Not done** — dropped mid-build once the row text was changed to match the
+   sample's existing format; see the deviation below.
 4. `tests/test_context_retrieval.py`: unit tests with a fake client, stdlib `unittest`, so
    the repo gains no dependency.
 
