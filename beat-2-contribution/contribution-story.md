@@ -417,9 +417,9 @@ one subject; it is a helper and one call site.
 **Deviation recorded mid-build (2026-10-26): the code was changed to match the README, not
 the other way round.** My plan had a fourth step that edited `README.md`, because the sample
 timeline there showed rows like `Retrieved 2 memories (incl. deprecation)` and my first
-implementation wrote `Retrieved N memories for: <task>`. Editing the docs to match my code
-was the lazy direction: the README was written first and describes the behaviour the
-maintainer intended, so it was my row text that was wrong. While writing the tests I changed
+implementation wrote `Retrieved N memories for: <task>`. The README was written first and
+describes the behaviour the maintainer intended, so it was my row text that was wrong, not
+the sample. While writing the tests I changed
 the write in `before_acting()` to produce the sample's own format — `Retrieved N memories`,
 plus ` (incl. deprecation)` when a deprecation decision is among the retrieved memories —
 and tested both branches of that text. The branch then needed no README change at all, and
