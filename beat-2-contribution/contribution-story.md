@@ -400,10 +400,7 @@ separate issues.
    `before_acting()`.
 2. `timeline_inspector.py`: fetch the reads subject's timeline and merge its events into the
    event list.
-3. ~~`README.md`: update the two sample rows and say in the `before_acting` bullet where the
-   records go.~~ **Not done** — dropped mid-build once the row text was changed to match the
-   sample's existing format; see the deviation below.
-4. `tests/test_context_retrieval.py`: unit tests with a fake client, stdlib `unittest`, so
+3. `tests/test_context_retrieval.py`: unit tests with a fake client, stdlib `unittest`, so
    the repo gains no dependency.
 
 **Deviation from the issue's suggested fix.** The issue proposed writing the episode to the
@@ -417,13 +414,19 @@ sibling subject makes the separation structural instead of conventional. I repor
 the issue before opening the PR and offered to move the write back if the maintainer prefers
 one subject; it is a helper and one call site.
 
-**Deviation recorded mid-build (2026-10-26): step 3 dropped.** The branch no longer touches
-`README.md`. While writing the tests I changed the row text to match the README sample's own
-format (`Retrieved N memories`, plus `(incl. deprecation)` when a deprecation is among them),
-which meant the sample no longer needed editing — the code now produces what the README
-already showed. One difference remains: the sample has no Planner row even though the Planner
-also calls `before_acting()`. The PR says so under "Deliberately not touched" and offers to
-add it. `plan.md` carries the same note.
+**Deviation recorded mid-build (2026-10-26): the code was changed to match the README, not
+the other way round.** My plan had a fourth step that edited `README.md`, because the sample
+timeline there showed rows like `Retrieved 2 memories (incl. deprecation)` and my first
+implementation wrote `Retrieved N memories for: <task>`. Editing the docs to match my code
+was the lazy direction: the README was written first and describes the behaviour the
+maintainer intended, so it was my row text that was wrong. While writing the tests I changed
+the write in `before_acting()` to produce the sample's own format — `Retrieved N memories`,
+plus ` (incl. deprecation)` when a deprecation decision is among the retrieved memories —
+and tested both branches of that text. The branch then needed no README change at all, and
+the sample stopped being aspirational: the code now produces what the docs already claimed.
+One difference remains, which I did not invent a fix for: the sample shows no Planner row
+even though the Planner also calls `before_acting()`. The PR names it under "Deliberately
+not touched" and offers to add it. `plan.md` carries the same note.
 
 **Toolkit**
 
