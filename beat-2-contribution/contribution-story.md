@@ -173,6 +173,11 @@ include much real code work.
 
 ## Understanding the Issue
 
+**In short.** The demo's timeline report has a section meant to show what each agent read
+from shared memory before acting. Nothing in the repo ever wrote those records, so the
+section was always empty and the run summary always said `Context reads : 0` — while the
+README advertised a sample full of rows the code could not produce.
+
 **Problem Description**
 
 `statewave-multi-agent-shared-context` is not an app anyone uses; it is a demo in the
@@ -434,8 +439,14 @@ one subject; it is a helper and one call site.
 
 ## Testing Strategy
 
-The fix records something, so proving it works means two things: a read that happened now
-shows up in the report, and nothing else changed. I ran four checks.
+**The change under test.** Three files, +166/−2 on `ef06cad`: a `reads_subject_id()` helper
+and a `write_episode(..., episode_type="context_retrieval")` call at the end of
+`before_acting()` in `statewave_agents/context.py`; a second `get_timeline()` fetch in
+`timeline_inspector.py` that merges the sibling subject's events; and a new
+`tests/test_context_retrieval.py`.
+
+Proving that works means two things: a read that happened now shows up in the report, and
+nothing else changed. I ran four checks.
 
 **1. The reproduction, re-run on both sides.** Same script each time: Planner, Coder and
 Reviewer each call `before_acting()` and then `note()`, then `print_timeline()` runs.
