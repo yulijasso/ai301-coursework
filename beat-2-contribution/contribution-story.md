@@ -209,7 +209,8 @@ started `statewavedev/statewave:latest` (image built 2026-10-16) with
 `pgvector/pgvector:pg16` under `docker compose` on `:8100`, and copied `.env.example` to
 `.env` with a free-tier Groq `LLM_API_KEY` and `STATEWAVE_BASE_URL`.
 
-Two things fought me. The default model in the repo, `groq/llama-3.3-70b-versatile`, now
+Two problems came up during setup. The default model in the repo,
+`groq/llama-3.3-70b-versatile`, now
 returns `model_not_found` on Groq, so I set `LLM_MODEL=groq/openai/gpt-oss-120b` and
 disclosed that override everywhere I report a run; nothing else about the steps changes.
 And with that model the Planner's and Coder's replies did not match the formats their
