@@ -117,7 +117,9 @@ auth…` while the shipped code writes `Retrieved N memories` with no task suffi
 output predated the tip. I re-ran all three checks at `ef06cad`, re-captured the live runs
 the PR actually cites (`sw-84af58f6` before, `sw-b8b2fd2c` after, `Context reads` 0 to 3,
 and `sw-ce4f5ccd` for the separation check with `leak in assembled_context: False`), and the
-gate passed at 00:55 on 10-26, against the live PR body. That pass is in `guard-log.md`'s sibling,
+gate passed at 00:55 on 10-26, against the live PR body. (The branch has moved since: two
+more tests, and the whole thing squashed into one commit, `16d0b67`, with five tests. Each
+of those edits went through the gate too.) That pass is in `guard-log.md`'s sibling,
 `gate-log.md`, and so are the five blocks before it. What I changed because of all this: I
 now re-run the manifest checks at HEAD before every gate run instead of trusting output
 captured at an earlier commit, because every single block the gate gave me was my evidence
@@ -439,7 +441,7 @@ one subject; it is a helper and one call site.
 
 ## Testing Strategy
 
-**The change under test.** Three files, +166/−2 on `ef06cad`: a `reads_subject_id()` helper
+**The change under test.** Three files, +197/−2 on `16d0b67`: a `reads_subject_id()` helper
 and a `write_episode(..., episode_type="context_retrieval")` call at the end of
 `before_acting()` in `statewave_agents/context.py`; a second `get_timeline()` fetch in
 `timeline_inspector.py` that merges the sibling subject's events; and a new
@@ -472,26 +474,34 @@ leak in assembled_context: False
 The retrieval records are only in the `:reads` subject, and a later `get_context()` on the
 shared subject does not return them.
 
-**3. Three unit tests** (`tests/test_context_retrieval.py`, fake client, stdlib `unittest`,
+**3. Five unit tests** (`tests/test_context_retrieval.py`, fake client, stdlib `unittest`,
 no new dependency):
 
 - `test_records_retrieval_in_reads_subject_without_compiling` — the episode goes to
-  `<subject_id>:reads` with the retrieved memories, and that subject is never compiled.
+  `<subject_id>:reads` with the retrieved memories mapped to the
+  `{type, confidence, content}` shape the inspector reads, and that subject is never
+  compiled.
 - `test_summary_omits_deprecation_note_when_none_retrieved` — the row reads
   `Retrieved N memories`, and gains ` (incl. deprecation)` only when a deprecation is among
   the memories.
+- `test_memory_without_confidence_maps_to_zero` — a memory arriving with no `confidence`
+  key is recorded as `confidence: 0` rather than `None`, which is what keeps the
+  inspector's `:.2f` formatting from raising on it.
+- `test_each_read_records_its_own_episode` — three `before_acting()` calls write three
+  episodes, in call order, all to the `:reads` subject, including a repeat caller. This is
+  check 5 below at unit level: the count follows reads, not distinct agents.
 - `test_shows_retrievals_from_reads_subject` — the inspector renders rows merged in from the
   sibling subject.
 
 ```
 .venv/bin/python -m unittest tests.test_context_retrieval -v
-Ran 3 tests in 0.008s
+Ran 5 tests in 0.008s
 OK
 ```
 
 **4. The repo's own checks.** The repo has no test suite, so its checks are what CI runs:
 the dependency install and `py_compile` over every tracked `.py`
-(`.github/workflows/ci.yml`). Both exit 0 at `ef06cad`. CI's markdown link check runs as a
+(`.github/workflows/ci.yml`). Both exit 0 at `16d0b67`. CI's markdown link check runs as a
 GitHub Action with no local command, so I left it to the PR; it is the one dated exclusion
 in my `ship-manifest.md`.
 
