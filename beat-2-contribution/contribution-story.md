@@ -427,9 +427,8 @@ one subject; it is a helper and one call site.
   set is built around, and my own rubric would have caught it on a package.
 - What changed: I split the deviation into its own section with the probe output behind it,
   which is the shape it then kept in the issue comment and in the PR description. I also
-  started recording deviations as dated entries at the bottom of `plan.md` as they happen,
-  which is how the dropped README step got written down the day it happened rather than at
-  the end.
+  started keeping a dated deviations list at the bottom of `plan.md` and writing to it the
+  day something changes, rather than reconstructing the build at the end.
 
 ---
 
