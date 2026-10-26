@@ -414,20 +414,6 @@ sibling subject makes the separation structural instead of conventional. I repor
 the issue before opening the PR and offered to move the write back if the maintainer prefers
 one subject; it is a helper and one call site.
 
-**Deviation recorded mid-build (2026-10-26): the code was changed to match the README, not
-the other way round.** My plan had a fourth step that edited `README.md`, because the sample
-timeline there showed rows like `Retrieved 2 memories (incl. deprecation)` and my first
-implementation wrote `Retrieved N memories for: <task>`. The README was written first and
-describes the behaviour the maintainer intended, so it was my row text that was wrong, not
-the sample. While writing the tests I changed
-the write in `before_acting()` to produce the sample's own format — `Retrieved N memories`,
-plus ` (incl. deprecation)` when a deprecation decision is among the retrieved memories —
-and tested both branches of that text. The branch then needed no README change at all, and
-the sample stopped being aspirational: the code now produces what the docs already claimed.
-One difference remains, which I did not invent a fix for: the sample shows no Planner row
-even though the Planner also calls `before_acting()`. The PR names it under "Deliberately
-not touched" and offers to add it. `plan.md` carries the same note.
-
 **Toolkit**
 
 - Tool: `plan-check` in live mode on `plan.md` and the plan comment, with the wild scope that
