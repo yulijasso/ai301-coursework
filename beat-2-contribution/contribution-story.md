@@ -103,23 +103,22 @@ real: I checked my local Statewave server and `sw-f7b75257` and `sw-d2893eea` we
 still there, with three `context_retrieval` episodes in `sw-d2893eea:reads`. So the stale
 thing was my evidence file, and I fixed it rather than the claim. The third run passed. Then
 I added a commit that dropped a redundant test, and the next run stopped again: my evidence
-still said three tests when the branch had two, and the thread still had no deviation note.
-I posted the repro and the `:reads` deviation on #485 on 2026-10-25, then rebuilt the branch
-as one commit, `ef06cad`, with three tests and no README change.
+listed a test the branch no longer had, and the thread still had no deviation note. I posted
+the repro and the `:reads` deviation on #485 on 2026-10-25, then rebuilt the branch as a
+single commit with no README change.
 
 2026-10-25: I opened pull request #7 at 23:12. My gate had passed on 10-24 at 23:32, but on
 an earlier shape of this branch: four files including a README change, before I rebuilt the
-work as the single commit `ef06cad` with three tests and no README edit. So the pass I had
+work as a single commit with no README edit. So the pass I had
 did not cover what I shipped, and I ran the gate again against the live PR body afterwards.
 That retroactive run took two more blocks to get right: first my `test_evidence.md` was still captured at the old commits and named a
 test that no longer exists, then its live output read `Retrieved 0 memories for: Build
 auth…` while the shipped code writes `Retrieved N memories` with no task suffix, so the
-output predated the tip. I re-ran all three checks at `ef06cad`, re-captured the live runs
+output predated the tip. I re-ran all three manifest checks at the tip, re-captured the live runs
 the PR actually cites (`sw-84af58f6` before, `sw-b8b2fd2c` after, `Context reads` 0 to 3,
 and `sw-ce4f5ccd` for the separation check with `leak in assembled_context: False`), and the
-gate passed at 00:55 on 10-26, against the live PR body. (The branch has moved since: one
-more test, and the whole thing squashed into one commit, `8ad4b87`, with four tests. Each
-of those edits went through the gate too.) That pass is in `guard-log.md`'s sibling,
+gate passed at 00:55 on 10-26, against the live PR body. (The branch has moved since, and is now the single
+commit `8ad4b87` with four tests. Each of those edits went through the gate too.) That pass is in `guard-log.md`'s sibling,
 `gate-log.md`, and so are the five blocks before it. What I changed because of all this: I
 now re-run the manifest checks at HEAD before every gate run instead of trusting output
 captured at an earlier commit, because every single block the gate gave me was my evidence
