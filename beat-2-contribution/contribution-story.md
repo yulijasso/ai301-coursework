@@ -179,9 +179,19 @@ The repo's whole pitch is that a shared-memory setup leaves an audit trail a
 message-passing setup cannot: you can see what every agent decided and what every agent
 read before deciding. `timeline_inspector.py` is the tool that shows it, and one of its
 sections, "AGENT CONTEXT RETRIEVALS", is supposed to list what each agent pulled out of
-shared context before acting. That half of the trail was never recorded. The section reads
-episodes of type `context_retrieval`, and no code in the repo wrote one — so the feature
-existed in the renderer and in the README, and nowhere else.
+shared context before acting. That half of the trail was never recorded.
+
+The section looks for episodes of type `context_retrieval` (`timeline_inspector.py:107`)
+and reads `retrieved_memories` out of their metadata
+(`core/statewave_client.py:76`). Nothing in the repo ever wrote one:
+`SharedContext.before_acting()` only reads context, and grepping for
+`episode_type="context_retrieval"` or `retrieved_memories` returns the two readers and no
+writer at all. So the feature existed in the renderer and in the README, and nowhere else.
+
+The module's own docstring calls this "the audit artifact that does not exist in any
+message-passing setup", which is the part I found funny in a useful way: it did not exist
+here either. Severity is low — nothing crashes, and the demo runs fine. What is missing is
+the evidence for the claim the project is built to make.
 
 **Expected Behavior**
 
@@ -237,17 +247,21 @@ there is no AGENT CONTEXT RETRIEVALS section at all, and the count is 0:
 
 **Affected Components**
 
-- `statewave_agents/context.py` — `SharedContext.before_acting()`, the read path. It calls
-  `get_context` and returns the bundle; it never writes an episode. This is where the
-  record has to start.
-- `timeline_inspector.py` — the renderer at line 107 that looks for `context_retrieval`
-  episodes and reads `retrieved_memories` out of their metadata, and the summary line that
-  counts them.
-- `core/statewave_client.py` — `write_episode` (line 26), the only way an episode gets
-  written. Its only callers were `SharedContext.decide` and `.note`, both of which compile
-  the subject afterwards when `auto_compile` is on, which is what made the compile
-  behaviour part of this issue rather than a detail.
-- `README.md` — the sample timeline, which documents the behaviour the code was missing.
+- `statewave_agents/context.py` — `SharedContext.before_acting()` (`:102-113` on `main` @
+  `eb66ddc`), the read path. It calls `get_context` and returns the bundle; it never writes
+  an episode. This is where the record has to start.
+- `timeline_inspector.py` — the filter at line 107 that collects `context_retrieval`
+  episodes, the panel block that is skipped whenever that list is empty, and the
+  `Context reads` line in the summary that counts them.
+- `core/statewave_client.py` — `write_episode` (`:26`), the only way an episode gets
+  written, and the metadata read at `:76` that the renderer depends on. Before this change
+  `write_episode`'s only callers were `SharedContext.decide` (`context.py:73`) and `.note`
+  (`:92`), and both compile the subject afterwards when `auto_compile` is on — which is why
+  compile behaviour became part of this issue rather than a detail.
+- `README.md` — the sample timeline at lines 158 and 160, which shows rows like
+  `Coder  context_retrieval  Retrieved 2 memories (incl. deprecation)`. The sample
+  documented behaviour the code could not produce, so it was evidence of intent as much as
+  a doc bug.
 
 **Toolkit**
 
