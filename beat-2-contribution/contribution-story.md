@@ -175,6 +175,25 @@ include much real code work.
 
 **Problem Description**
 
+*In plain terms, before the details.* Three agents — a Planner, a Coder and a Reviewer —
+work on one task and share a single memory instead of passing messages to each other.
+Before each of them acts, it asks that shared memory "what has anyone decided so far?".
+Afterwards it writes back what it decided. `timeline_inspector.py` is the report that shows
+both halves: who decided what, and who looked at what before deciding.
+
+Only the first half was ever written down. Deciding was recorded; looking was not. The
+report still had a section for the looking, so that section was always empty, and the
+README showed an example of it full of rows the code had no way to produce. Nobody noticed
+because an empty section just does not render — there is no error.
+
+The fix is to write a note every time an agent looks: "the Coder looked, and got back 2
+things". The catch, and the reason my fix differs from the one suggested in the issue, is
+where that note goes. Put it in the shared memory and the next tidy-up pass files the note
+itself as a memory, so the next agent "remembers" that someone looked something up — the
+record pollutes the thing it is supposed to describe. I put the notes in a separate
+notebook (`<subject_id>:reads`) that nothing tidies and no agent reads, and taught the
+report to read from both.
+
 The repo's whole pitch is that a shared-memory setup leaves an audit trail a
 message-passing setup cannot: you can see what every agent decided and what every agent
 read before deciding. `timeline_inspector.py` is the tool that shows it, and one of its
