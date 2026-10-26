@@ -495,6 +495,12 @@ Ran 4 tests in 0.007s
 OK
 ```
 
+**Negative control.** A green suite proves nothing unless it goes red on a broken fix, so I
+broke the change three ways, one at a time, and ran the tests after each: writing the
+episode to the shared subject instead of `:reads` fails two tests, dropping the
+` (incl. deprecation)` suffix fails one, and removing the merge in `timeline_inspector.py`
+fails one. Restored, the suite is green again and `git diff` shows no source change.
+
 **4. The repo's own checks.** The repo has no test suite, so its checks are what CI runs:
 the dependency install and `py_compile` over every tracked `.py`
 (`.github/workflows/ci.yml`). Both exit 0 at `8ad4b87`. CI's markdown link check runs as a
