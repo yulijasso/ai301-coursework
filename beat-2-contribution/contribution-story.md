@@ -175,6 +175,19 @@ include much real code work.
 
 **Problem Description**
 
+*What this project is.* `statewave-multi-agent-shared-context` is not an app anyone uses;
+it is a demo in the Statewave project, the open-source memory runtime for AI agents. Its
+argument is that agents working in parallel contradict each other when they only pass
+messages around — one deprecates a token while another is still building on it — and that
+they stop contradicting each other when they all read and write one shared context layer
+instead. `main.py` stages exactly that: a Planner, a Coder and a Reviewer building a fake
+auth service, run once in naive mode where they collide and once through Statewave where
+they do not. The README calls the third and last demo moment the shared timeline, and
+`timeline_inspector.py` is it: the receipts, every decision and every lookup, which the
+module's docstring calls "the audit artifact that does not exist in any message-passing
+setup". That framing is why this bug is worth fixing — the missing half is in the part of
+the demo that exists to prove the demo's point.
+
 *In plain terms, before the details.* Three agents — a Planner, a Coder and a Reviewer —
 work on one task and share a single memory instead of passing messages to each other.
 Before each of them acts, it asks that shared memory "what has anyone decided so far?".
@@ -194,11 +207,9 @@ record pollutes the thing it is supposed to describe. I put the notes in a separ
 notebook (`<subject_id>:reads`) that nothing tidies and no agent reads, and taught the
 report to read from both.
 
-The repo's whole pitch is that a shared-memory setup leaves an audit trail a
-message-passing setup cannot: you can see what every agent decided and what every agent
-read before deciding. `timeline_inspector.py` is the tool that shows it, and one of its
-sections, "AGENT CONTEXT RETRIEVALS", is supposed to list what each agent pulled out of
-shared context before acting. That half of the trail was never recorded.
+Now the detail. The "AGENT CONTEXT RETRIEVALS" section of that report is supposed to list
+what each agent pulled out of shared context before acting, and that half of the trail was
+never recorded.
 
 The section looks for episodes of type `context_retrieval` (`timeline_inspector.py:107`)
 and reads `retrieved_memories` out of their metadata
