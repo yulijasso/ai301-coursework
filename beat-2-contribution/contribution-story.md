@@ -361,29 +361,85 @@ means the timeline in my runs shows fewer notes than the README's sample.
 
 **Analysis**
 
-[Your analysis of the root cause: what is causing the issue, traced
-to the files and functions involved.]
+The renderer and the writer never met. `timeline_inspector.py` (L107-108) collects episodes
+of type `context_retrieval` and reads `retrieved_memories` out of their metadata
+(`core/statewave_client.py` L76), but the only two callers of `write_episode` were
+`SharedContext.decide()` (`statewave_agents/context.py` L73) and `.note()` (L92).
+`before_acting()` (L102-113) calls `get_context()` and returns the bundle without writing
+anything. So no episode of that type has ever existed in this repo, the section is skipped
+every time, and the summary reports `Context reads : 0` by arithmetic rather than by
+accident.
+
+The second half of the analysis is about compiling, and it is the part that decided the
+design. Statewave compiles a subject into retrievable memory, and `SharedContext` does that
+automatically on `decide()` and `note()` when `auto_compile` is on. A compile picks up every
+uncompiled episode on the subject, not just the newest one — so an audit record written to
+the shared subject does not stay out of memory by having no compile after it; it waits until
+the next agent action and gets compiled then.
 
 **Proposed Solution**
 
-[High-level description of your fix approach, and what you are
-deliberately NOT changing.]
+Write the retrieval record, but to a sibling subject that nothing compiles and no agent
+reads: `<subject_id>:reads`, behind a `reads_subject_id()` helper so the name exists in one
+place. `before_acting()` writes a `context_retrieval` episode there after each read, with
+`metadata["retrieved_memories"]` shaped as `{type, confidence, content}` per memory, which
+is what the inspector expects. `timeline_inspector.py` fetches that subject alongside the
+run's own and merges its events, so both the section and the `Context reads` count see them;
+memories still come only from the shared subject.
+
+Deliberately not changed: compile behaviour, `decide()`, `note()`, any agent in `agents/`,
+smaramwbc/statewave#475 (where `before_acting()` reads a `memories` key the SDK never
+returns, which is why every row currently reads "Retrieved 0 memories"), and `get_context`
+ignoring `top_k` (`core/statewave_client.py` L57-61). Both of those are real, and both are
+separate issues.
 
 **Implementation Plan**
 
-1. [Modify file X to do Y]
-2. [Add or change Z]
-3. [Update tests]
+1. `statewave_agents/context.py`: add `reads_subject_id(subject_id)` returning
+   `"<subject_id>:reads"`, and write the `context_retrieval` episode at the end of
+   `before_acting()`.
+2. `timeline_inspector.py`: fetch the reads subject's timeline and merge its events into the
+   event list.
+3. `README.md`: update the two sample rows and say in the `before_acting` bullet where the
+   records go.
+4. `tests/test_context_retrieval.py`: unit tests with a fake client, stdlib `unittest`, so
+   the repo gains no dependency.
 
-[Record deviations here as they happen: what changed mid-build and
-why. A recorded deviation is honest work; silent drift is not.]
+**Deviation from the issue's suggested fix.** The issue proposed writing the episode to the
+run's own subject and simply not compiling afterwards. I tried that first and it does not
+hold: on a probe run, the Coder's retrieval record was not a memory until the Coder's next
+`note()`, and after that compile it was — and the Reviewer's `get_context()` then returned
+that retrieval log as its *top* fact, ranked above the Coder's actual work and the Planner's
+decision. The server has no per-type compile skip, and `assembled_context` is assembled
+server-side, so filtering on the client cannot clean what the next agent reasons from. The
+sibling subject makes the separation structural instead of conventional. I reported this on
+the issue before opening the PR and offered to move the write back if the maintainer prefers
+one subject; it is a helper and one call site.
+
+**Deviation recorded mid-build (2026-10-26): step 3 dropped.** The branch no longer touches
+`README.md`. While writing the tests I changed the row text to match the README sample's own
+format (`Retrieved N memories`, plus `(incl. deprecation)` when a deprecation is among them),
+which meant the sample no longer needed editing — the code now produces what the README
+already showed. One difference remains: the sample has no Planner row even though the Planner
+also calls `before_acting()`. The PR says so under "Deliberately not touched" and offers to
+add it. `plan.md` carries the same note.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: `plan-check` in live mode on `plan.md` and the plan comment, with the wild scope that
+  replaced its unit-3 sandbox scope.
+- What it produced: an accept, and before that the push to make the root cause point at
+  specific lines rather than at a file — the check wants the cause traced to code, so "the
+  inspector reads an episode type nothing writes" had to become L107-108 against L73 and L92.
+- Difficulties: my first plan had the fix and the compile problem tangled in one paragraph,
+  so the deviation was invisible — it read as the plan, not as a departure from the issue's
+  plan. A plan whose deviation cannot be seen is the plan-fidelity failure the sandbox eval
+  set is built around, and my own rubric would have caught it on a package.
+- What changed: I split the deviation into its own section with the probe output behind it,
+  which is the shape it then kept in the issue comment and in the PR description. I also
+  started recording deviations as dated entries at the bottom of `plan.md` as they happen,
+  which is how the dropped README step got written down the day it happened rather than at
+  the end.
 
 ---
 
