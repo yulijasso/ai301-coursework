@@ -434,17 +434,85 @@ one subject; it is a helper and one call site.
 
 ## Testing Strategy
 
-[What observable checks prove the fix: your reproduction steps re-run
-against the built change (before and after), and the repo's own test
-suite or checks with the outcome shown. "Tests pass" with nothing
-observable named is not a strategy.]
+The fix is a recording change, so "it works" means one thing: a read that happened shows up
+in the report, and nothing else moves. Four checks, in the order I ran them.
+
+**1. The reproduction, re-run.** The same script on both sides — Planner, Coder and Reviewer
+each calling `before_acting()` then `note()`, then the repo's own `print_timeline()`. On
+`main` @ `eb66ddc` (run `sw-84af58f6`) the event log holds three notes, there is no AGENT
+CONTEXT RETRIEVALS section at all, and the summary reads `Context reads : 0`. On the branch
+(run `sw-b8b2fd2c`) each agent's `context_retrieval` row appears immediately before its
+note, the section renders a panel per agent, and the summary reads `Context reads : 3`.
+Those two transcripts are in `test_evidence.md` and in the PR, and they are the before and
+after the issue asked for.
+
+**2. The thing the fix is really about: no leak.** Recording a read is easy; recording it
+without feeding it back to the next agent is the point. On run `sw-ce4f5ccd` I checked the
+shared subject's event types and what a later `get_context()` returns:
+
+```
+shared subject episode types: ['architectural_decision', 'implementation_note', 'review_finding']
+reads subject episode types : ['context_retrieval', 'context_retrieval', 'context_retrieval']
+leak in assembled_context: False
+```
+
+The retrieval records exist only in the `:reads` subject, and the context the Reviewer would
+reason from does not contain them. That is the observable form of the claim the sibling
+subject is for, and it is also the check that would fail loudest if someone later moved the
+write back to the shared subject.
+
+**3. Unit tests, three of them**, in `tests/test_context_retrieval.py` with a fake client, so
+they need no server and no new dependency:
+
+- `test_records_retrieval_in_reads_subject_without_compiling` — the episode goes to
+  `<subject_id>:reads`, carries the retrieved memories, and nothing compiles that subject.
+- `test_summary_omits_deprecation_note_when_none_retrieved` — the row text is
+  `Retrieved N memories`, with the ` (incl. deprecation)` suffix only when a deprecation
+  decision is among the memories. This is the branch the README sample made me get right.
+- `test_shows_retrievals_from_reads_subject` — the inspector renders rows merged in from the
+  sibling subject, which is the half of the fix that lives outside `context.py`.
+
+```
+.venv/bin/python -m unittest tests.test_context_retrieval -v
+Ran 3 tests in 0.008s
+OK
+```
+
+**4. The repo's own checks.** This repo has no test suite, so its checks are what CI runs:
+the dependency install and `py_compile` over every tracked `.py` file
+(`.github/workflows/ci.yml`). Both exit 0 at the shipped commit `ef06cad`. CI's third job is
+a markdown link check that runs as a GitHub Action with no local command, so I left it to
+the PR rather than claiming it locally — that is the one dated exclusion in my
+`ship-manifest.md`.
+
+One more check that is not about the fix working but about it not breaking what exists: I
+ran the fixed inspector against `sw-f7b75257`, a run made before this change that has no
+`:reads` subject at all. It renders as before and exits 0, so merging a subject that may not
+exist does not break older runs.
+
+What this strategy does not cover, and I say so in the PR: every retrieval row currently
+reads "Retrieved 0 memories", because of smaramwbc/statewave#475, where the SDK returns
+memories under a key `before_acting()` does not read. The count is whatever
+`before_acting()` returned, so the rows will fill in once that lands — but the non-zero path
+is covered by the unit tests, not by a live run.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: `repro-check` again for the before/after shape, and the `ship-manifest.md` rows the
+  ship-gate runs, which is where "the repo's own checks" stopped being a phrase and became
+  two commands with sources.
+- What it produced: the manifest's two must-pass rows in fresh-shell form
+  (`.venv/bin/pip install -q -r requirements.txt`, then the `py_compile` sweep) and a dated
+  exclusion for the link check, plus gate runs that re-ran both on every attempt to ship.
+- Difficulties: my evidence kept going stale. The gate blocked me three times on it — output
+  captured at `5d688bf` when the branch was `b3c0f88`, a test count of three when a commit
+  had dropped one to two, and a live transcript whose row text predated the change that made
+  it match the README. None of those were the code being wrong; they were me describing a
+  branch I no longer had.
+- What changed: I stopped treating `test_evidence.md` as a document I write once. It is now
+  regenerated at the tip commit before any gate run, and every run id in it is one I can
+  still look up on the server, which is how I confirmed `sw-f7b75257` and `sw-d2893eea` were
+  real when the gate called the claim into question.
 
 ---
 
