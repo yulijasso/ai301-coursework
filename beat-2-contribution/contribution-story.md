@@ -202,31 +202,63 @@ include much real code work.
 
 **Environment Setup**
 
-[What a stranger would need to stand this up: your operating system,
-the relevant versions (language, runtime, package manager, the project
-itself), and how you set the project up. Then the challenges you faced
-and how you solved them, or that none came up.]
+macOS 15.7.5 (arm64), Python 3.11.14, with the project's own venv
+(`python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt`), which brings in
+the statewave SDK 1.5.0 and litellm 1.106.0. The demo needs a running Statewave server, so I
+started `statewavedev/statewave:latest` (image built 2026-10-16) with
+`pgvector/pgvector:pg16` under `docker compose` on `:8100`, and copied `.env.example` to
+`.env` with a free-tier Groq `LLM_API_KEY` and `STATEWAVE_BASE_URL`.
+
+Two things fought me. The default model in the repo, `groq/llama-3.3-70b-versatile`, now
+returns `model_not_found` on Groq, so I set `LLM_MODEL=groq/openai/gpt-oss-120b` and
+disclosed that override everywhere I report a run; nothing else about the steps changes.
+And with that model the Planner's and Coder's replies did not match the formats their
+parsers expect, so they published no decisions — which is unrelated to this bug, but it
+means the timeline in my runs shows fewer notes than the README's sample.
 
 **Steps to Reproduce**
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+1. Start the Statewave server on `:8100` and set `LLM_API_KEY` in `.env`.
+2. `LLM_MODEL=groq/openai/gpt-oss-120b python main.py --mode statewave`
+3. `python timeline_inspector.py --run <run_id>`
+4. Observed: no "AGENT CONTEXT RETRIEVALS" section anywhere in the output, and the summary
+   reads `Context reads : 0`, even though the run's own log shows the Coder and the
+   Reviewer each reading shared context before acting.
 
 **Reproduction Evidence**
 
-- **Commit showing reproduction:** [link to commit in your fork]
-- **Screenshots/logs:** [if applicable]
-- **My findings:** [what you discovered during reproduction; an
-  honest, evidenced cannot-reproduce that led you to re-pick or ask
-  the maintainer belongs here and costs you nothing]
+- **Reproduction comment upstream:**
+  https://github.com/smaramwbc/statewave/issues/485#issuecomment-6394341177 (posted
+  2026-10-25), with the full `main.py` and `timeline_inspector.py` transcripts.
+- **The reproducing run:** `sw-f7b75257` on `main` @ `eb66ddc` — `Context reads : 0`, no
+  retrieval rows. The fixed run for comparison is `sw-d2893eea`, `Context reads : 3`.
+- **Logs:** `test_evidence.md` at my clone root holds the captured before/after output, the
+  separation check (`sw-ce4f5ccd`, `leak in assembled_context: False`), and the
+  older-run compatibility check (`sw-f7b75257` rendered by the fixed inspector, exit 0).
+- **My findings:** the bug is not that the section renders wrong, it is that nothing ever
+  writes the episode it renders from. `timeline_inspector.py` reads `context_retrieval`
+  episodes (line 107) and `SharedContext.before_acting()` only ever read context — grep
+  returns two readers and no writer. So the section was dead code from the start, and the
+  README's sample output showed rows the code could not produce. I also found that the
+  issue's suggested fix, writing the episode to the run's own subject without compiling,
+  does not hold: the next `note()` or `decide()` compiles the whole subject, and in my
+  check the retrieval log came back as the Reviewer's top retrieved fact. That finding is
+  what sent the fix to a sibling `<subject_id>:reads` subject.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: `repro-check` in live mode, with the wild scope that replaced its unit-2 sandbox
+  scope, run on my claim comment and then on the full repro package before I posted it.
+- What it produced: `accept`, with per-check evidence lines — environment recorded, steps
+  followable, artifacts present, outcome matching the artifacts, and the model-override
+  deviation named. The run is saved as `repro-check-485.md` at my clone root.
+- Difficulties: the first draft of my repro report described what I saw rather than showing
+  it, and `artifact-present` is written to fail exactly that. It also made me name the
+  model override as a deviation instead of quietly using it, which is the line that ended up
+  in the upstream comment too.
+- What changed: I rewrote the report around pasted transcripts instead of narration, and I
+  added the control comparison (a run with one chunk, and later the `:reads` separation
+  check) so the evidence shows the trigger rather than just the failure.
 
 ---
 
