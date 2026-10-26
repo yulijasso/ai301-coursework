@@ -175,53 +175,34 @@ include much real code work.
 
 **Problem Description**
 
-*What this project is.* `statewave-multi-agent-shared-context` is not an app anyone uses;
-it is a demo in the Statewave project, the open-source memory runtime for AI agents. Its
-argument is that agents working in parallel contradict each other when they only pass
-messages around — one deprecates a token while another is still building on it — and that
-they stop contradicting each other when they all read and write one shared context layer
-instead. `main.py` stages exactly that: a Planner, a Coder and a Reviewer building a fake
-auth service, run once in naive mode where they collide and once through Statewave where
-they do not. The README calls the third and last demo moment the shared timeline, and
-`timeline_inspector.py` is it: the receipts, every decision and every lookup, which the
-module's docstring calls "the audit artifact that does not exist in any message-passing
-setup". That framing is why this bug is worth fixing — the missing half is in the part of
-the demo that exists to prove the demo's point.
+`statewave-multi-agent-shared-context` is not an app anyone uses; it is a demo in the
+Statewave project, the open-source memory runtime for AI agents. Its argument is that
+agents working in parallel contradict each other when they only pass messages around — one
+deprecates a token while another is still building on it — and that they stop contradicting
+each other when they all read and write one shared context layer instead. `main.py` stages
+that with three agents, a Planner, a Coder and a Reviewer, building a fake auth service:
+once in naive mode where they collide, once through Statewave where they do not. Each agent
+asks the shared memory "what has anyone decided so far?" before it acts, and writes back
+what it decided afterwards.
 
-*In plain terms, before the details.* Three agents — a Planner, a Coder and a Reviewer —
-work on one task and share a single memory instead of passing messages to each other.
-Before each of them acts, it asks that shared memory "what has anyone decided so far?".
-Afterwards it writes back what it decided. `timeline_inspector.py` is the report that shows
-both halves: who decided what, and who looked at what before deciding.
-
-Only the first half was ever written down. Deciding was recorded; looking was not. The
-report still had a section for the looking, so that section was always empty, and the
-README showed an example of it full of rows the code had no way to produce. Nobody noticed
-because an empty section just does not render — there is no error.
-
-The fix is to write a note every time an agent looks: "the Coder looked, and got back 2
-things". The catch, and the reason my fix differs from the one suggested in the issue, is
-where that note goes. Put it in the shared memory and the next tidy-up pass files the note
-itself as a memory, so the next agent "remembers" that someone looked something up — the
-record pollutes the thing it is supposed to describe. I put the notes in a separate
-notebook (`<subject_id>:reads`) that nothing tidies and no agent reads, and taught the
-report to read from both.
-
-Now the detail. The "AGENT CONTEXT RETRIEVALS" section of that report is supposed to list
-what each agent pulled out of shared context before acting, and that half of the trail was
-never recorded.
+`timeline_inspector.py` is the demo's last moment: the report that shows both halves, who
+decided what and who looked at what before deciding. Only the first half was ever written
+down. Deciding was recorded; looking was not. The report still had a section for the
+looking, so that section was always empty, and the README showed an example of it full of
+rows the code had no way to produce. Nobody noticed, because an empty section simply does
+not render — there is no error, and the demo runs fine. The fix is to write a note every
+time an agent looks; where that note goes turned out to be the whole problem, and that is
+Solution Approach's story.
 
 The section looks for episodes of type `context_retrieval` (`timeline_inspector.py:107`)
-and reads `retrieved_memories` out of their metadata
-(`core/statewave_client.py:76`). Nothing in the repo ever wrote one:
-`SharedContext.before_acting()` only reads context, and grepping for
-`episode_type="context_retrieval"` or `retrieved_memories` returns the two readers and no
-writer at all. So the feature existed in the renderer and in the README, and nowhere else.
-
-The module's own docstring calls this "the audit artifact that does not exist in any
-message-passing setup", which is the part I found funny in a useful way: it did not exist
-here either. Severity is low — nothing crashes, and the demo runs fine. What is missing is
-the evidence for the claim the project is built to make.
+and reads `retrieved_memories` out of their metadata (`core/statewave_client.py:76`).
+Nothing in the repo ever wrote one: `SharedContext.before_acting()` only reads context, and
+grepping for `episode_type="context_retrieval"` or `retrieved_memories` returns the two
+readers and no writer at all. So the feature existed in the renderer and in the README, and
+nowhere else. The module's own docstring calls this "the audit artifact that does not exist
+in any message-passing setup", which is the part I found funny in a useful way: it did not
+exist here either. Severity is low — nothing crashes. What is missing is the evidence for
+the claim the project is built to make.
 
 **Expected Behavior**
 
