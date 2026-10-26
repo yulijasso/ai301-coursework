@@ -456,8 +456,10 @@ Reviewer each call `before_acting()` and then `note()`, then `print_timeline()` 
 | `main` @ `eb66ddc` | `sw-84af58f6` | no section | 0 |
 | This branch | `sw-b8b2fd2c` | one panel per agent | 3 |
 
-On the branch, each agent's `context_retrieval` row appears just before its note. Both
-transcripts are in `test_evidence.md` and in the PR.
+On the branch, each agent's `context_retrieval` row appears just before its note. The count
+is one record per `before_acting()` call, so 3 here is three reads by the demo's three
+agents, not a fixed number — check 5 below is where that is shown. Both transcripts are in
+`test_evidence.md` and in the PR.
 
 **2. No leak into what the next agent reads.** Run `sw-ce4f5ccd`:
 
@@ -492,6 +494,27 @@ the dependency install and `py_compile` over every tracked `.py`
 (`.github/workflows/ci.yml`). Both exit 0 at `ef06cad`. CI's markdown link check runs as a
 GitHub Action with no local command, so I left it to the PR; it is the one dated exclusion
 in my `ship-manifest.md`.
+
+**5. More than three reads.** Three agents each reading once leaves `Context reads : 3`
+ambiguous: is the section counting agents or reads? Run `sw-4d84f50a` has four agents and
+six `before_acting()` calls, with the Coder and Reviewer each acting twice in a review
+round-trip:
+
+```
+retrieval records: 6
+per agent: ['Planner', 'Architect', 'Coder', 'Reviewer', 'Coder', 'Reviewer']
+  →  Agents active   : Architect, Coder, Planner, Reviewer
+  →  Context reads   : 6
+```
+
+Six panels render, with the Coder and Reviewer each appearing twice at different
+timestamps, so the section tracks reads rather than agents: a second read by the same agent
+is a second row, which is the point — the Coder's two reads returned different context,
+one before the review existed and one after `STATUS: NEEDS WORK` was published. The summary
+counts three different things: `Agents active : 4` is distinct names, `Context reads : 6` is
+`before_acting()` calls, and `Episodes written : 6` is decisions and notes published. The separation holds at that size too:
+`leak in assembled_context: False`, and the shared subject still holds only the two
+decisions, the two notes and the two review findings.
 
 **Older runs still work.** The fixed inspector on `sw-f7b75257`, a run from before this
 change with no `:reads` subject, renders as before and exits 0.
