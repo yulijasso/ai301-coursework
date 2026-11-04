@@ -96,10 +96,20 @@ live PR body afterwards, and it passed at `8ad4b87` on 10-26. Because of that, I
 regenerate `test_evidence.md` at HEAD before every gate run and re-gate after every amend
 or force-push.
 
-**Unit 8: [one line on the tool work]**
+**Unit 8: Installed the PR-monitor, wrote my playbook, and it told me to wait**
 
 [2-4 sentences: the PR-monitor and your playbook. What it read, what it
 drafted, what you did with the draft.]
+
+2026-11-03: The other outside PRs in this repo have waited 17–29 days with no review, but the
+same maintainer answers in `statewave` within a day or two, so my playbook says no nudge
+before 21 days, only one ever, and it goes on #485 instead of the PR. The monitor read my PR
+as quiet (open 9 days, no conflicts, no comments) and didn't draft a message, just a wait
+note that quoted my 21-day rule and said the earliest I could nudge is 2026-11-15, so I
+didn't post anything. It also showed me that GitHub has no CI checks on my PR, but my nudge
+rule said I'd tell the maintainer "the checks still pass," so I changed it to say my checks
+pass locally. The one thing it can't do is read #485, where my nudge would go, so I'll check
+that thread myself before 11-15.
 
 ---
 
@@ -528,55 +538,61 @@ by the unit tests, not by a live run, and the PR says so.
 
 ## Implementation Notes
 
+[A running log, added to as you work. Date each entry. What you
+built, decisions you made when you made them, wrong turns included.]
+
 **2026-10-24**
 
-I branched `fix/485-record-context-retrievals` off `main` and started with the issue's own
-suggestion: write the `context_retrieval` episode to the run's shared subject and skip the
-compile after it. A compile probe (`.repro-485/compile_probe_485.out`) killed that idea. The
-next `note()` compiled the whole subject, and the Reviewer's `get_context()` then returned
-the Coder's retrieval log as its top fact. So I moved the write to a sibling
-`<subject_id>:reads` subject that nothing compiles, and gave it a `reads_subject_id()` helper
-so the name is defined in one place. First commit `5d688bf`: `context.py`,
-`timeline_inspector.py`, a README sample update, and three unit tests. Later that night I
-added a commit (`b3c0f88`) that added the Planner's read to the README sample and dropped a
-test I thought was redundant. That left my evidence file describing tests the branch no
-longer had.
+I made the branch `fix/485-record-context-retrievals` and started with what the issue
+suggested: write the `context_retrieval` episode to the shared subject and just don't
+compile after it. I wrote a small probe to test that first (`.repro-485/compile_probe_485.out`),
+and it didn't work. The next `note()` compiled everything on the subject, and the Reviewer's
+`get_context()` came back with the Coder's retrieval log as its top fact. So I moved the
+write to a separate `<subject_id>:reads` subject that nothing ever compiles, with a
+`reads_subject_id()` helper so the name only lives in one place. My first commit was
+`5d688bf`: `context.py`, `timeline_inspector.py`, a README sample update, and three tests.
+Later that night I made another commit (`b3c0f88`) that added the Planner to the README
+sample and removed a test I thought was extra. After that, my evidence file still listed a
+test that wasn't on the branch anymore.
 
 **2026-10-25**
 
-I posted the repro and the `:reads` deviation on #485 so the maintainer would see the
-departure before the PR. Then I reset the branch to `3ff3c0d` and rebuilt it as one commit
-with no README change. Instead of editing the sample to match my output, I changed the row
-text to match the sample's existing format (`Retrieved N memories`, plus
-` (incl. deprecation)`), which removed the README step from the plan. I wrote that down as a
-dated deviation in `plan.md`. That gave commit `ef06cad`, three files, and I opened PR #7 at
-23:12.
+I posted my repro and the `:reads` change on #485, so the maintainer would know I was doing
+something different from the issue before seeing the PR. Then I reset the branch to
+`3ff3c0d` and rebuilt it as one commit without touching the README. I realized I was
+changing the README to fit my output, when I should change my output to fit the README. So
+I made the row text match the format the sample already uses (`Retrieved N memories`, plus
+` (incl. deprecation)`), and the README step wasn't needed anymore. I wrote that down in
+`plan.md` with the date. That gave me commit `ef06cad` with three files, and I opened PR #7
+at 23:12.
 
 **2026-10-26**
 
-I re-ran everything at the tip commit and re-captured the live runs the PR cites:
-`sw-84af58f6` before and `sw-b8b2fd2c` after (`Context reads` 0 → 3), and `sw-ce4f5ccd` for
-the separation check (`leak in assembled_context: False`). I added a commit (`c1f5f19`)
-covering zero-confidence memories and one record per read. Then I squashed it back into a
-single commit with five tests, and amended to `8ad4b87`. That folded the zero-confidence case
-into the main test, leaving four. Then I ran a negative control: writing to the shared subject
-fails two tests, dropping the deprecation suffix fails one, and removing the inspector merge
-fails one. A six-read run (`sw-4d84f50a`, Coder and Reviewer each acting twice) showed the
-count follows reads, not agents. I force-pushed the branch, so the PR is now `8ad4b87`.
+I ran everything again on the latest commit and redid the live runs the PR points to:
+`sw-84af58f6` before and `sw-b8b2fd2c` after (`Context reads` went from 0 to 3), and
+`sw-ce4f5ccd` to show the reads stay out of memory (`leak in assembled_context: False`). I
+added a commit (`c1f5f19`) with tests for memories with no confidence and for one record per
+read. Then I squashed it all into one commit with five tests, and amended it to `8ad4b87`,
+where I moved the no-confidence check into the main test, so there are four. To make sure the
+tests actually catch something, I broke the fix on purpose three ways: writing to the shared
+subject fails two tests, removing the deprecation note fails one, and removing the inspector
+merge fails one. I also did a run with six reads (`sw-4d84f50a`, where the Coder and Reviewer
+each act twice) to show the count follows reads, not agents. I force-pushed, so the PR is now
+`8ad4b87`.
 
 **Toolkit**
 
-- Tool: Claude Code on the branch, working from `plan.md`. I kept a dated deviations list at
-  its bottom and checked every change against it before committing.
-- What it produced: the three-file diff in `8ad4b87` (+183/−2), the compile probe that
-  moved the write to `:reads`, and the dated README deviation in `plan.md`.
-- Difficulties: I kept amending and rebuilding the branch (`5d688bf` → `ef06cad` →
-  `8ad4b87`), and each rebuild left my evidence and descriptions pointing at a commit that no
-  longer existed. The README edit also crept in as "keeping the docs in sync" when it was
-  really me fitting the docs to my output.
-- What changed: I write the plan deviation the same day the change happens. When code and
-  docs disagree, I change the code to fit the documented format before touching the docs.
-  After every rebuild I re-check that test counts and commit ids are the same everywhere.
+- Tool: Claude Code on my branch, working from `plan.md`. I kept a dated list of changes to
+  the plan at the bottom of it and checked each change against the plan before committing.
+- What it produced: the three-file change in `8ad4b87` (+183/−2), the probe that showed the
+  write had to go to `:reads`, and the dated note in `plan.md` about dropping the README step.
+- Difficulties: I rebuilt the branch three times (`5d688bf` → `ef06cad` → `8ad4b87`), and
+  every time, my evidence and descriptions still pointed at a commit that was gone. The
+  README change also snuck in. I told myself it was keeping the docs up to date, but really I
+  was changing the docs to match my output.
+- What changed: now I write down a plan change the same day I make it. If my code and the
+  docs disagree, I fix the code to match the docs first. After every rebuild I check that the
+  test count and commit id are the same everywhere I mention them.
 
 ---
 
@@ -601,24 +617,29 @@ AI-assistance disclosure. The full text is in `pull-request-485.md` next to this
 **Maintainer Feedback:**
 
 - 2026-10-26: none yet.
+- 2026-11-03: still no review, comment, or reaction on the PR or on #485 (8 days). That's
+  normal for this repo: its four other outside PRs (#2–#5) have had no review in 17–29 days,
+  and its last commit was 2026-07-28. My PR-monitor read it as QUIET and drafted a wait
+  note, not a nudge: my playbook's threshold is 21 days, so the earliest nudge is 2026-11-15,
+  on #485.
 
 **Status:** Awaiting review
 
 **Toolkit**
 
-- Tool: the ship-gate (`check_gate.py --branch`). It runs my manifest's two checks, then my
-  pr-precheck on the branch, plan, evidence and description, plus the voice guard on
-  `gh pr create`.
-- What it produced: eleven runs in `gate-log.md`, with five blocks and six passes. The last
-  pass, at 02:08 on 10-26, covers head `8ad4b87` against the live body: plan-fidelity,
-  test-evidence, diff-quality and standards-and-comms all pass.
-- Difficulties: the code never failed a check. Every block was my evidence or description
-  describing a branch I no longer had: no description at all, a test count of three against
-  two, transcripts said to be in a thread that had only my claim, and row text older than the
-  tip. I also opened the PR on a pass from an earlier four-file shape of the branch, so I had
-  to re-gate against the live PR afterwards.
-- What changed: I regenerate `test_evidence.md` at HEAD before every gate run, and I run the
-  gate after every amend or force-push, not just before the first `gh pr create`.
+- Tool: the ship-gate (`check_gate.py --branch`). It runs the two checks in my manifest, then
+  my pr-precheck on my branch, plan, evidence, and PR description. My voice guard also checks
+  the description when I run `gh pr create`.
+- What it produced: I ran it eleven times (`gate-log.md`). It blocked me five times and passed
+  six. The last pass was at 02:08 on 10-26, on `8ad4b87` with the real PR description, and
+  all four checks passed: plan-fidelity, test-evidence, diff-quality, and standards-and-comms.
+- Difficulties: my code never failed. Every block was because my evidence or description was
+  out of date. The first time I had no description at all. Then it said three tests when the
+  branch had two, it said my transcripts were on the issue thread when only my claim was
+  there, and my output was from before my last commit. I also opened the PR on a pass from an
+  older version of the branch, so I had to run the gate again on the real PR afterward.
+- What changed: I remake `test_evidence.md` on the latest commit before every gate run, and I
+  run the gate again after every amend or force-push, not just once before opening the PR.
 
 ---
 
@@ -628,14 +649,48 @@ AI-assistance disclosure. The full text is in `pull-request-485.md` next to this
 
 [What you learned technically, named concretely.]
 
+- **How Statewave compiles memory.** When it compiles a subject, it picks up every episode
+  that hasn't been compiled yet, not just the newest one. So skipping the compile right after
+  a write doesn't keep it out of memory, because the next `note()` compiles it anyway. I only
+  found that out because I tested the issue's idea with a probe (`compile_probe_485.py`)
+  before building it, and it's the reason my fix uses a separate `:reads` subject.
+- **Finding a bug that doesn't throw an error.** The empty section never crashed anything,
+  it just didn't show up. I found the cause by listing everything that calls `write_episode`
+  and comparing it to the one episode type the inspector looks for. Nothing ever wrote it.
+- **Testing without a test suite or an LLM.** The repo had no tests, so I wrote four using a
+  fake client and Python's built-in `unittest`, so I didn't add any dependencies. Then I broke
+  my fix on purpose three ways to make sure the tests actually fail when they should.
+- **Running everything locally.** I ran the Statewave server and pgvector with
+  `docker compose`, and switched the LLM model when the repo's default one was gone from Groq.
+  I said so every time I reported a run.
+
 **Challenges Overcome**
 
 [What was hard and how you solved it; point at the real events, the
 Toolkit blocks above are full of them.]
 
+The hardest part wasn't the code. It was keeping my evidence accurate while the branch kept
+changing. The ship-gate blocked me five times, and every time it was because my evidence or
+PR description was talking about a commit I didn't have anymore (see my Unit 7 entry and the
+Pull Request Toolkit block). I fixed it by remaking `test_evidence.md` on the latest commit
+before every gate run. The second hard part was disagreeing with the issue's suggested fix
+without being rude about it. I posted my probe output on #485 before opening the PR, gave the
+change its own section in my plan and in the PR, and said I'd move it back to one subject if
+the maintainer prefers that. The third was setup. The repo's default model gave
+`model_not_found`, and with the model I switched to, the Planner and Coder didn't publish any
+decisions. I said I'd changed the model, and I left that parsing problem alone since it's not
+part of this bug.
+
 **What I'd Do Differently Next Time**
 
 [Reflection on your process.]
+
+First, I'd check how fast the code repo reviews PRs before I claim an issue, not after. The
+issue is in `statewave`, where the maintainer merges in a day or two, but the code is in a
+demo repo where no outside PR has ever been reviewed. Second, I'd figure out what my branch
+should look like before writing any evidence. I rebuilt it three times (`5d688bf` →
+`ef06cad` → `8ad4b87`), and each time my evidence went out of date. Third, I wouldn't open a
+PR on an old gate pass. I'd run the gate again on exactly what I'm about to open.
 
 ---
 
@@ -646,5 +701,14 @@ already shows you using: the doc you followed to set the environment
 up, the thread that explained the bug, the person who answered you.
 One real entry beats ten plausible ones.]
 
-- [Link to documentation that helped]
-- [Discussion, issue, or post that helped]
+- [smaramwbc/statewave#485](https://github.com/smaramwbc/statewave/issues/485): the issue
+  itself. It pointed me to `timeline_inspector.py` L107-108 and suggested a fix, which gave me
+  a place to start. Testing that suggestion is how I found the compile problem.
+- [smaramwbc/statewave#475](https://github.com/smaramwbc/statewave/issues/475): this explained
+  why every row says "Retrieved 0 memories" (`before_acting()` reads a key the SDK never
+  returns), so I knew that wasn't part of my bug.
+- [statewave's CONTRIBUTING.md](https://github.com/smaramwbc/statewave/blob/main/CONTRIBUTING.md):
+  I used it to write my `CLAUDE.local.md`, because the demo repo doesn't have its own.
+- The demo repo's `.github/workflows/ci.yml`: where I got the two checks for my manifest.
+- The demo repo's README sample timeline: I matched my row text to its format
+  (`Retrieved N memories`, ` (incl. deprecation)`) instead of changing the README.
