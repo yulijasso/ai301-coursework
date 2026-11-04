@@ -57,7 +57,7 @@ From then on, `get_context()` returns it. In the check below, the Reviewer's top
 
 Writing the record to `<subject_id>:reads` keeps the issue's approach and closes that gap. Nothing compiles that subject and no agent reads from it; only `timeline_inspector.py` does. The cost is one extra `get_timeline` call per inspector run. If you'd rather keep everything in one subject, I'm happy to switch; the change lives in one helper.
 
-One smaller difference: the suggestion stores `memories` as-is, but the inspector reads `type`, `confidence` and `content` from each one and formats confidence with `:.2f`. This PR maps those fields explicitly (`kind` or `type`, and `confidence or 0`), so a memory with no confidence shows 0.00 instead of crashing the inspector.
+One smaller difference: the suggestion stores `memories` as-is, but the inspector reads `type`, `confidence` and `content` from each one and formats confidence with `:.2f`. This PR maps those fields explicitly (`kind` or `type`, and `confidence or 0`), so what gets recorded is always the shape the inspector reads.
 
 <details>
 <summary>What I ran to check that (on <code>main</code> @ <code>eb66ddc</code>)</summary>
@@ -115,17 +115,21 @@ I also didn't take the issue's alternative of deleting the section: the README p
 
 ## Testing
 
-The repo had no test suite, so I added `tests/test_context_retrieval.py` (stdlib `unittest` with a fake client, no new dependency). Its three tests check that:
-- `before_acting()` records the retrieval in the `:reads` subject, never compiles it, and writes `Retrieved 1 memories (incl. deprecation)` when a deprecation is among the memories.
+The repo had no test suite, so I added `tests/test_context_retrieval.py` (stdlib `unittest` with a fake client, no new dependency). Its four tests check that:
+- `before_acting()` records the retrieval in the `:reads` subject, never compiles it, maps each memory to the `{type, confidence, content}` shape the inspector reads, and writes `Retrieved 1 memories (incl. deprecation)` when a deprecation is among them.
 - without a deprecation, the text is just `Retrieved 2 memories`.
+- three `before_acting()` calls write three episodes, in call order, all to the `:reads` subject, including a repeat caller — the count follows reads, not distinct agents.
 - the inspector renders retrieval rows merged in from the `:reads` subject.
 
 Results:
-- `python -m unittest tests.test_context_retrieval`: 3 tests, OK. CI doesn't run unit tests, so I ran them locally.
+- `python -m unittest tests.test_context_retrieval`: 4 tests, OK. CI doesn't run unit tests, so I ran them locally.
+- Negative control on those tests: writing the episode to the shared subject instead of `:reads` fails two of them, dropping the ` (incl. deprecation)` suffix fails one, and removing the merge in `timeline_inspector.py` fails one. Restored, the suite is green again.
 - `pip install -r requirements.txt` and the `py_compile` check over every `.py` file (what CI runs): both clean.
 - Separation check (`sw-ce4f5ccd`): after a Planner/Coder/Reviewer run, the shared subject holds only the `architectural_decision`, `implementation_note` and `review_finding` episodes, the `:reads` subject holds the three `context_retrieval` episodes, and a later `get_context()` on the shared subject does not surface them (`leak in assembled_context: False`).
 - Older runs still display: the new inspector on `sw-f7b75257`, a run from before this change with no `:reads` subject, renders as before and exits 0.
 - End-to-end through `main.py` with `LLM_MODEL=groq/openai/gpt-oss-120b` (the default `groq/llama-3.3-70b-versatile` now returns `model_not_found` on Groq), same command on both sides: `Context reads` went from 0 (`sw-f7b75257`, on `main`) to 3 (`sw-d2893eea`, this branch), with one retrieval row per agent. This run predates the row-text change above, which only affects the wording.
+
+- Count tracks reads, not agents (`sw-4d84f50a`): four agents and six `before_acting()` calls, with the Coder and Reviewer each acting twice in a review round-trip, renders six panels with each repeat agent at its own timestamp and `Context reads : 6`. `leak in assembled_context` is still `False` at that size, and the shared subject still holds only the two decisions, two notes and two review findings.
 
 Environment: macOS 15.7.5, Python 3.11.14, statewave SDK 1.5.0, `statewavedev/statewave:latest` (image built 2026-10-16).
 
@@ -134,3 +138,8 @@ Not run locally: CI's markdown link check, which is a GitHub Action, so I'm rely
 ## AI-assistance disclosure
 
 AI-assisted: Claude Code was used to help reproduce the bug, write the fix and tests, and draft this description. I reviewed, ran, and verified every change above myself before opening this PR. (This repo states no AI-use policy; disclosing anyway.)
+
+
+
+
+

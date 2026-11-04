@@ -84,45 +84,17 @@ confirmed that while reproducing the bug.
 
 **Unit 7: Installed the ship-gate, wrote my manifest, and shipped before it passed**
 
-2026-10-24: I installed the ship-gate, which runs my manifest's checks and then my own
-pr-precheck before any `gh pr create` goes out. The install swapped pr-precheck to the
-real-world scope and kept the old one as `scope.md.sandbox`. My manifest has two rows that
-run, both mined from the repo's `.github/workflows/ci.yml`: the dependency install and the
-`py_compile` check over every tracked `.py` file, written as `.venv/bin/pip` and
-`.venv/bin/python` so they run in a cold shell instead of my activated one. I excluded CI's
-markdown link check with the date and the reason: it runs as a GitHub Action
-(`lycheeverse/lychee-action@v2`), there is no command the repo asks a contributor to run,
-and `lychee` is not installed here. There is no test row in the first table because the repo
-has no test suite of its own; the tests on my branch are mine, and I run them separately.
-
-My first gate run stopped because I had no PR description at all. The second stopped
-because the description I then wrote said the before/after transcripts were in the issue
-thread and cited `main.py` runs, while my own `test_evidence.md` still said "Not yet run
-through `main.py` (no LLM key)" and the thread had only my claim comment. The runs were
-real: I checked my local Statewave server and `sw-f7b75257` and `sw-d2893eea` were both
-still there, with three `context_retrieval` episodes in `sw-d2893eea:reads`. So the stale
-thing was my evidence file, and I fixed it rather than the claim. The third run passed. Then
-I added a commit that dropped a redundant test, and the next run stopped again: my evidence
-listed a test the branch no longer had, and the thread still had no deviation note. I posted
-the repro and the `:reads` deviation on #485 on 2026-10-25, then rebuilt the branch as a
-single commit with no README change.
-
-2026-10-25: I opened pull request #7 at 23:12. My gate had passed on 10-24 at 23:32, but on
-an earlier shape of this branch: four files including a README change, before I rebuilt the
-work as a single commit with no README edit. So the pass I had
-did not cover what I shipped, and I ran the gate again against the live PR body afterwards.
-That retroactive run took two more blocks to get right: first my `test_evidence.md` was still captured at the old commits and named a
-test that no longer exists, then its live output read `Retrieved 0 memories for: Build
-auth…` while the shipped code writes `Retrieved N memories` with no task suffix, so the
-output predated the tip. I re-ran all three manifest checks at the tip, re-captured the live runs
-the PR actually cites (`sw-84af58f6` before, `sw-b8b2fd2c` after, `Context reads` 0 to 3,
-and `sw-ce4f5ccd` for the separation check with `leak in assembled_context: False`), and the
-gate passed at 00:55 on 10-26, against the live PR body. (The branch has moved since, and is now the single
-commit `8ad4b87` with four tests. Each of those edits went through the gate too.) That pass is in `guard-log.md`'s sibling,
-`gate-log.md`, and so are the five blocks before it. What I changed because of all this: I
-now re-run the manifest checks at HEAD before every gate run instead of trusting output
-captured at an earlier commit, because every single block the gate gave me was my evidence
-file describing a branch I no longer had.
+My manifest runs two checks taken from the repo's CI, the dependency install and a
+`py_compile` sweep, written as `.venv/bin/...` so they work in a fresh shell; I excluded
+CI's lychee link check with a date and reason, since it only runs as a GitHub Action. The
+code passed every gate run, but the gate blocked my branch five times, and every block was
+my evidence or description describing a branch I no longer had: no description, a test
+count that no longer matched, transcripts I said were in the issue thread when they weren't,
+and live output captured before my last commit. What confused me most was that I opened PR #7
+on a pass from an earlier four-file version of the branch, so I had to re-gate against the
+live PR body afterwards, and it passed at `8ad4b87` on 10-26. Because of that, I now
+regenerate `test_evidence.md` at HEAD before every gate run and re-gate after every amend
+or force-push.
 
 **Unit 8: [one line on the tool work]**
 
@@ -556,31 +528,63 @@ by the unit tests, not by a live run, and the PR says so.
 
 ## Implementation Notes
 
-[A running log, added to as you work. Date each entry. What you
-built, decisions you made when you made them, wrong turns included.]
+**2026-10-24**
 
-**[Date]**
+I branched `fix/485-record-context-retrievals` off `main` and started with the issue's own
+suggestion: write the `context_retrieval` episode to the run's shared subject and skip the
+compile after it. A compile probe (`.repro-485/compile_probe_485.out`) killed that idea. The
+next `note()` compiled the whole subject, and the Reviewer's `get_context()` then returned
+the Coder's retrieval log as its top fact. So I moved the write to a sibling
+`<subject_id>:reads` subject that nothing compiles, and gave it a `reads_subject_id()` helper
+so the name is defined in one place. First commit `5d688bf`: `context.py`,
+`timeline_inspector.py`, a README sample update, and three unit tests. Later that night I
+added a commit (`b3c0f88`) that added the Planner's read to the README sample and dropped a
+test I thought was redundant. That left my evidence file describing tests the branch no
+longer had.
 
-[Entry]
+**2026-10-25**
 
-**[Date]**
+I posted the repro and the `:reads` deviation on #485 so the maintainer would see the
+departure before the PR. Then I reset the branch to `3ff3c0d` and rebuilt it as one commit
+with no README change. Instead of editing the sample to match my output, I changed the row
+text to match the sample's existing format (`Retrieved N memories`, plus
+` (incl. deprecation)`), which removed the README step from the plan. I wrote that down as a
+dated deviation in `plan.md`. That gave commit `ef06cad`, three files, and I opened PR #7 at
+23:12.
 
-[Entry]
+**2026-10-26**
+
+I re-ran everything at the tip commit and re-captured the live runs the PR cites:
+`sw-84af58f6` before and `sw-b8b2fd2c` after (`Context reads` 0 → 3), and `sw-ce4f5ccd` for
+the separation check (`leak in assembled_context: False`). I added a commit (`c1f5f19`)
+covering zero-confidence memories and one record per read. Then I squashed it back into a
+single commit with five tests, and amended to `8ad4b87`. That folded the zero-confidence case
+into the main test, leaving four. Then I ran a negative control: writing to the shared subject
+fails two tests, dropping the deprecation suffix fails one, and removing the inspector merge
+fails one. A six-read run (`sw-4d84f50a`, Coder and Reviewer each acting twice) showed the
+count follows reads, not agents. I force-pushed the branch, so the PR is now `8ad4b87`.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Claude Code on the branch, working from `plan.md`. I kept a dated deviations list at
+  its bottom and checked every change against it before committing.
+- What it produced: the three-file diff in `8ad4b87` (+183/−2), the compile probe that
+  moved the write to `:reads`, and the dated README deviation in `plan.md`.
+- Difficulties: I kept amending and rebuilding the branch (`5d688bf` → `ef06cad` →
+  `8ad4b87`), and each rebuild left my evidence and descriptions pointing at a commit that no
+  longer existed. The README edit also crept in as "keeping the docs in sync" when it was
+  really me fitting the docs to my output.
+- What changed: I write the plan deviation the same day the change happens. When code and
+  docs disagree, I change the code to fit the documented format before touching the docs.
+  After every rebuild I re-check that test counts and commit ids are the same everywhere.
 
 ---
 
 ## Pull Request
 
 **PR Link:** https://github.com/smaramwbc/statewave-multi-agent-shared-context/pull/7
-(opened 2026-10-26, one commit: `ef06cad` "fix: record context retrievals so the timeline
-can show them")
+(opened 2026-10-25 with one commit, `ef06cad`. The branch is now the single commit
+`8ad4b87` "fix: record context retrievals so the timeline can show them".)
 
 **PR Description:** The PR fixes statewave#485. `before_acting()` now writes a
 `context_retrieval` episode after each read, with the row text in the README sample's format
@@ -590,7 +594,8 @@ suggested fix but writes the record to a sibling subject, `<subject_id>:reads`, 
 the shared subject the next `note()` or `decide()` compiles it into memory, and in my check
 it became the Reviewer's top retrieved fact. The description shows before/after inspector
 output (`Context reads` 0 → 3), the check behind the sibling subject, the scope I left
-alone (the README, #475, compile behaviour, the agents), three new unit tests, and an
+alone (the README, #475, compile behaviour, the agents), four new unit tests with a negative
+control, a six-read check showing the count follows reads rather than agents, and an
 AI-assistance disclosure. The full text is in `pull-request-485.md` next to this file.
 
 **Maintainer Feedback:**
@@ -601,10 +606,19 @@ AI-assistance disclosure. The full text is in `pull-request-485.md` next to this
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: the ship-gate (`check_gate.py --branch`). It runs my manifest's two checks, then my
+  pr-precheck on the branch, plan, evidence and description, plus the voice guard on
+  `gh pr create`.
+- What it produced: eleven runs in `gate-log.md`, with five blocks and six passes. The last
+  pass, at 02:08 on 10-26, covers head `8ad4b87` against the live body: plan-fidelity,
+  test-evidence, diff-quality and standards-and-comms all pass.
+- Difficulties: the code never failed a check. Every block was my evidence or description
+  describing a branch I no longer had: no description at all, a test count of three against
+  two, transcripts said to be in a thread that had only my claim, and row text older than the
+  tip. I also opened the PR on a pass from an earlier four-file shape of the branch, so I had
+  to re-gate against the live PR afterwards.
+- What changed: I regenerate `test_evidence.md` at HEAD before every gate run, and I run the
+  gate after every amend or force-push, not just before the first `gh pr create`.
 
 ---
 
