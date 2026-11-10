@@ -91,15 +91,12 @@ code passed every gate run, but the gate blocked my branch five times, and every
 my evidence or description describing a branch I no longer had: no description, a test
 count that no longer matched, transcripts I said were in the issue thread when they weren't,
 and live output captured before my last commit. What confused me most was that I opened PR #7
-on a pass from an earlier four-file version of the branch, so I had to re-gate against the
+on a pass from an earlier three-file version of the branch, so I had to re-gate against the
 live PR body afterwards, and it passed at `8ad4b87` on 10-26. Because of that, I now
 regenerate `test_evidence.md` at HEAD before every gate run and re-gate after every amend
 or force-push.
 
 **Unit 8: Installed the PR-monitor, wrote my playbook, and it told me to wait**
-
-[2-4 sentences: the PR-monitor and your playbook. What it read, what it
-drafted, what you did with the draft.]
 
 2026-11-03: The other outside PRs in this repo have waited 17–29 days with no review, but the
 same maintainer answers in `statewave` within a day or two, so my playbook says no nudge
@@ -538,9 +535,6 @@ by the unit tests, not by a live run, and the PR says so.
 
 ## Implementation Notes
 
-[A running log, added to as you work. Date each entry. What you
-built, decisions you made when you made them, wrong turns included.]
-
 **2026-10-24**
 
 I made the branch `fix/485-record-context-retrievals` and started with what the issue
@@ -647,8 +641,6 @@ AI-assistance disclosure. The full text is in `pull-request-485.md` next to this
 
 **Technical Skills Gained**
 
-[What you learned technically, named concretely.]
-
 - **How Statewave compiles memory.** When it compiles a subject, it picks up every episode
   that hasn't been compiled yet, not just the newest one. So skipping the compile right after
   a write doesn't keep it out of memory, because the next `note()` compiles it anyway. I only
@@ -666,9 +658,6 @@ AI-assistance disclosure. The full text is in `pull-request-485.md` next to this
 
 **Challenges Overcome**
 
-[What was hard and how you solved it; point at the real events, the
-Toolkit blocks above are full of them.]
-
 The hardest part wasn't the code. It was keeping my evidence accurate while the branch kept
 changing. The ship-gate blocked me five times, and every time it was because my evidence or
 PR description was talking about a commit I didn't have anymore (see my Unit 7 entry and the
@@ -683,8 +672,6 @@ part of this bug.
 
 **What I'd Do Differently Next Time**
 
-[Reflection on your process.]
-
 First, I'd check how fast the code repo reviews PRs before I claim an issue, not after. The
 issue is in `statewave`, where the maintainer merges in a day or two, but the code is in a
 demo repo where no outside PR has ever been reviewed. Second, I'd figure out what my branch
@@ -695,11 +682,6 @@ PR on an old gate pass. I'd run the gate again on exactly what I'm about to open
 ---
 
 ## Resources Used
-
-[What actually helped, not a reading list. List things this story
-already shows you using: the doc you followed to set the environment
-up, the thread that explained the bug, the person who answered you.
-One real entry beats ten plausible ones.]
 
 - [smaramwbc/statewave#485](https://github.com/smaramwbc/statewave/issues/485): the issue
   itself. It pointed me to `timeline_inspector.py` L107-108 and suggested a fix, which gave me
